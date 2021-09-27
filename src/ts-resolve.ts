@@ -5,13 +5,13 @@ import { loadTsConfigAndResolveReferences, Tsconfig } from "./tsconfig-loader";
 const { statSync, Stats } = require("fs");
 
 const {
-  getPackageConfig,
-  getPackageScopeConfig,
+  getPackageConfig, // getPackageConfig does filesystem access
+  getPackageScopeConfig, // getPackageScopeConfig calls getPackageConfig
   shouldBeTreatedAsRelativeOrAbsolutePath,
-  packageImportsResolve,
-  packageExportsResolve,
   parsePackageName,
   getConditionsSet,
+  packageImportsResolve,
+  packageExportsResolve,
 } = require("./resolve_nofs");
 
 // const { finalizeResolution } = require("./resolve_fs");
