@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "./lib/index.js",
   "license": "MIT",
+  "description": "Resolve typescript ES modules",
   "dependencies": {
     "json5": "^2.1.2",
     "strip-bom": "^3.0.0",
