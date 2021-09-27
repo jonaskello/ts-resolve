@@ -13,7 +13,6 @@ const isWindows = process.platform === "win32";
  *   format {string}
  *   source {string|ArrayBuffer|TypedArray}
  */
-
 export async function load(url: string, context, defaultLoad) {
   console.log("LOAD: START", url, context);
 
