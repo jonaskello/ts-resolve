@@ -5,7 +5,6 @@ import { loadTsConfigAndResolveReferences, Tsconfig } from "./tsconfig-loader";
 const { statSync, Stats } = require("fs");
 
 const {
-  emitLegacyIndexDeprecation,
   getPackageConfig,
   getPackageScopeConfig,
   shouldBeTreatedAsRelativeOrAbsolutePath,
