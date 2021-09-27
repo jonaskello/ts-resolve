@@ -1,0 +1,7 @@
+**/__mocks__/**
+**/__tests__/**
+**/__stories__/**
+**/__examples__/**
+examples/**
+tsconfig.json
+tsconfig.tsbuildinfo

@@ -1,0 +1,8 @@
+{
+    // all packages
+    "files": [],
+    "references": [
+      { "path": "server" },
+      { "path": "shared" },
+    ]
+  }
