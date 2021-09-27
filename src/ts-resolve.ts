@@ -15,7 +15,7 @@ const {
   getConditionsSet,
 } = require("./resolve_nofs");
 
-const { finalizeResolution, ERR_MODULE_NOT_FOUND } = require("./resolve_fs");
+const { finalizeResolution } = require("./resolve_fs");
 
 type TsConfigInfo = {
   tsconfigMap: Map<string, Tsconfig>;
@@ -166,46 +166,13 @@ function myModuleResolve(
   }
   console.log("myModuleResolve: END");
 
-  // // At this point the bare specifier is resolved to one or more possible JS files
-  // if (!Array.isArray(possibleUrls)) {
-  //   resolved = [resolved];
-  // }
-
-  // if (Array.isArray(resolved)) {
-  //   resolved = probeForLegacyIndex(resolved);
-  // }
-
-  // if (possibleUrls === undefined || possibleUrls.length === 0) {
-  //   return undefined;
-  // }
-
-  // Check which tsconfig this file belongs to and translate the path....
-  // for (const [outDir, tsconfig] of absoluteOutDirToTsConfigMap!.entries()) {
-  // }
-
-  // Now we should have resolved to an URL with file-path (eg. foo.js),
-  // It could also be to resolved to an extensionless file at this point...
-  // We should check if
-  // the resolved file is in the output space of the tsconfig used.
-  // If it is we need to map it back to the typescript file that will compile to the resolved file
-  // and resolve to that file instead
-
+  // At this point the bare specifier is resolved to one or more possible JS files
   // Cannot be a .ts file since that case only exists for the entry file and is handled directly in resolve()
-  // Do we want to support extensionless files? In that case we need to check if it is
-  // a directory or file... Typescript always outputs .js files so we could just add that?
-
-  // const resolved2 = translateJsUrlBackToTypescriptUrl(resolved);
   console.log("bare specifiier possibleUrls", possibleUrls.length);
   for (const possibleUrl of possibleUrls) {
     // Convert path (useful if the specifier was a reference to a package which is in the same composite project)
     // If the resolution resulted in a symlink then use the real path instead
     const realPossibleUrl = realPathOfSymlinkedUrl(possibleUrl);
-    // const tsConfigAbsPath = getTsConfigAbsPathForOutFile(
-    //   tsConfigInfo,
-    //   realPossibleUrl
-    // );
-    // console.log("theTsConfig", tsConfigAbsPath);
-    // if (tsConfigAbsPath !== undefined) {
     const possibleSourceUrl = convertTypescriptOutUrlToSourceUrl(
       tsConfigInfo,
       realPossibleUrl
@@ -226,7 +193,7 @@ function myModuleResolve(
 }
 
 /**
- * Given an URL that typescript will emit a JS file to when compiled, convert that back to the URL
+ * Given an URL that a TS file will emit a JS file to when compiled, convert that back to the URL
  * for the source TS file.
  */
 function convertTypescriptOutUrlToSourceUrl(
@@ -295,17 +262,6 @@ function realPathOfSymlinkedUrl(inputUrl: URL): URL {
   // console.log("realPathOfSymlinkedUrl--END", fullPath);
   return pathToFileURL(fullPath);
 }
-
-// function getTsConfigAbsPathForOutFile(
-//   tsConfigInfo: TsConfigInfo,
-//   fileUrl: URL
-// ): string | undefined {
-//   const filePath = fileURLToPath(fileUrl);
-//   for (const key of tsConfigInfo.absOutDirToTsConfig.keys()) {
-//     if (filePath.startsWith(key)) return key;
-//   }
-//   return undefined;
-// }
 
 /**
  * Given a file with a javascript extension, probe for a file with
@@ -379,7 +335,8 @@ function packageResolve(
 
   // eslint can't handle the above code.
   // eslint-disable-next-line no-unreachable
-  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base ?? ""));
+  //throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base ?? ""));
+  return [];
 }
 
 // This could probably be moved to a built-in API
@@ -441,104 +398,6 @@ function resolveSelf(base, packageName, packageSubpath, conditions) {
   }
   return undefined;
 }
-
-// /**
-//  * Legacy CommonJS main resolution:
-//  * 1. let M = pkg_url + (json main field)
-//  * 2. TRY(M, M.js, M.json, M.node)
-//  * 3. TRY(M/index.js, M/index.json, M/index.node)
-//  * 4. TRY(pkg_url/index.js, pkg_url/index.json, pkg_url/index.node)
-//  * 5. NOT_FOUND
-//  * @param {URL} packageJSONUrl
-//  * @param {PackageConfig} packageConfig
-//  * @param {string | URL | undefined} base
-//  * @returns {URL}
-//  */
-// function legacyMainResolve(packageJSONUrl, packageConfig, base) {
-//   let guess;
-//   if (packageConfig.main !== undefined) {
-//     // Note: fs check redundances will be handled by Descriptor cache here.
-//     if (
-//       fileExists((guess = new URL(`./${packageConfig.main}`, packageJSONUrl)))
-//     ) {
-//       return guess;
-//     } else if (
-//       fileExists(
-//         (guess = new URL(`./${packageConfig.main}.js`, packageJSONUrl))
-//       )
-//     ) {
-//     } else if (
-//       fileExists(
-//         (guess = new URL(`./${packageConfig.main}.json`, packageJSONUrl))
-//       )
-//     ) {
-//     } else if (
-//       fileExists(
-//         (guess = new URL(`./${packageConfig.main}.node`, packageJSONUrl))
-//       )
-//     ) {
-//     } else if (
-//       fileExists(
-//         (guess = new URL(`./${packageConfig.main}/index.js`, packageJSONUrl))
-//       )
-//     ) {
-//     } else if (
-//       fileExists(
-//         (guess = new URL(`./${packageConfig.main}/index.json`, packageJSONUrl))
-//       )
-//     ) {
-//     } else if (
-//       fileExists(
-//         (guess = new URL(`./${packageConfig.main}/index.node`, packageJSONUrl))
-//       )
-//     ) {
-//     } else guess = undefined;
-//     if (guess) {
-//       emitLegacyIndexDeprecation(
-//         guess,
-//         packageJSONUrl,
-//         base,
-//         packageConfig.main
-//       );
-//       return guess;
-//     }
-//     // Fallthrough.
-//   }
-//   if (fileExists((guess = new URL("./index.js", packageJSONUrl)))) {
-//   } else if (fileExists((guess = new URL("./index.json", packageJSONUrl)))) {
-//   } else if (fileExists((guess = new URL("./index.node", packageJSONUrl)))) {
-//   } else guess = undefined;
-//   if (guess) {
-//     emitLegacyIndexDeprecation(guess, packageJSONUrl, base, packageConfig.main);
-//     return guess;
-//   }
-//   // Not found.
-//   throw new ERR_MODULE_NOT_FOUND(
-//     fileURLToPath(new URL(".", packageJSONUrl)),
-//     fileURLToPath(base)
-//   );
-// }
-
-function probeForLegacyIndex(urls) {
-  for (const url of urls) {
-    if (fileExists(url)) {
-      emitLegacyIndexDeprecation(
-        url,
-        "packageJSONUrl",
-        "base",
-        "packageConfig.main"
-      );
-      return url;
-    }
-  }
-}
-
-// type LegacyIndexGuess = {
-//   path: string;
-//   packageJSONUrl: URL;
-//   base: string;
-//   packageConfigMain: string;
-// };
 
 /**
  * Legacy CommonJS main resolution:
