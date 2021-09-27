@@ -35,28 +35,10 @@ type ResolveReturn = {
 };
 
 /**
- * specifier {string}
- * context {Object}
- *   conditions {string[]}
- *   parentURL {string|undefined}
- * defaultResolve {Function} The Node.js default resolver.
- * Returns: {Object}
- *   format {string|null|undefined} 'builtin' | 'commonjs' | 'json' | 'module' | 'wasm'
- *   url {string} The absolute url to the import target (such as file://…)
+ * Resolves to a typescript file, or returns undefined if
+ * no typescript file was available.
  */
-export function resolve(
-  specifier: string,
-  context: ResolveContext,
-  defaultResolve
-): ResolveReturn {
-  const inner = resolveInner(specifier, context);
-  if (inner === undefined) {
-    return defaultResolve(specifier, context, defaultResolve);
-  }
-  return inner;
-}
-
-export function resolveInner(
+export function tsResolve(
   specifier: string,
   context: ResolveContext
 ): ResolveReturn | undefined {
