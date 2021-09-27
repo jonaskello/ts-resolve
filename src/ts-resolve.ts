@@ -49,6 +49,17 @@ export function resolve(
   context: ResolveContext,
   defaultResolve
 ): ResolveReturn {
+  const inner = resolveInner(specifier, context);
+  if (inner === undefined) {
+    return defaultResolve(specifier, context, defaultResolve);
+  }
+  return inner;
+}
+
+export function resolveInner(
+  specifier: string,
+  context: ResolveContext
+): ResolveReturn | undefined {
   console.log("RESOLVE: START");
 
   // parentURL is the URL returned by previous resolve, so it is not the specifier that did the import but the resolved specifier
@@ -62,7 +73,7 @@ export function resolve(
   // Let node handle `data:` and `node:` prefix etc.
   const excludeRegex = /^\w+:/;
   if (excludeRegex.test(specifier)) {
-    return defaultResolve(specifier, context, defaultResolve);
+    return undefined;
   }
 
   // Build tsconfig map if we don't have it
@@ -99,7 +110,7 @@ export function resolve(
   }
 
   // Not resolved as typescript, forward to default resolve
-  return defaultResolve(specifier, context, defaultResolve);
+  return undefined;
 }
 
 /**
