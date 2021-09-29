@@ -22,44 +22,23 @@ const {
   StringPrototypeIndexOf,
   StringPrototypeLastIndexOf,
   StringPrototypeSlice,
-  StringPrototypeSplit,
   StringPrototypeStartsWith,
 } = require("./support/node-primordials");
-// const internalFS = require("internal/fs/utils");
-// const { NativeModule } = require("internal/bootstrap/loaders");
-const Module = require("module");
-const NativeModule = {
-  canBeRequiredByUsers(specifier) {
-    return Module.builtinModules.includes(specifier);
-  },
-};
-// const { realpathSync, statSync, Stats } = require("fs");
 const { getOptionValue } = require("./support/node-options");
 // Do not eagerly grab .manifest, it may be in TDZ
 const policy = getOptionValue("--experimental-policy")
   ? require("internal/process/policy")
   : null;
-const { sep, relative, resolve } = require("path");
-const preserveSymlinks = getOptionValue("--preserve-symlinks");
-const preserveSymlinksMain = getOptionValue("--preserve-symlinks-main");
-const typeFlag = getOptionValue("--input-type");
 const pendingDeprecation = getOptionValue("--pending-deprecation");
 const { URL, pathToFileURL, fileURLToPath } = require("url");
 const {
-  ERR_INPUT_TYPE_NOT_ALLOWED,
   ERR_INVALID_ARG_VALUE,
   ERR_INVALID_MODULE_SPECIFIER,
   ERR_INVALID_PACKAGE_CONFIG,
   ERR_INVALID_PACKAGE_TARGET,
-  ERR_MANIFEST_DEPENDENCY_MISSING,
-  ERR_MODULE_NOT_FOUND,
   ERR_PACKAGE_IMPORT_NOT_DEFINED,
   ERR_PACKAGE_PATH_NOT_EXPORTED,
-  ERR_UNSUPPORTED_DIR_IMPORT,
-  ERR_UNSUPPORTED_ESM_URL_SCHEME,
 } = require("./support/node-errors").codes;
-// const { Module: CJSModule } = require("internal/modules/cjs/loader");
-const CJSModule = Module;
 
 const packageJsonReader = require("./support/node-package-json-reader.js");
 const userConditions = getOptionValue("--conditions");
@@ -147,7 +126,6 @@ function getConditionsSet(conditions): Set<string> {
   return DEFAULT_CONDITIONS_SET;
 }
 
-const realpathCache = new SafeMap();
 const packageJSONCache = new SafeMap(); /* string -> PackageConfig */
 
 /**
@@ -244,8 +222,6 @@ function getPackageScopeConfig(resolved) {
   packageJSONCache.set(packageJSONPath, packageConfig);
   return packageConfig;
 }
-
-const encodedSepRegEx = /%2F|%2C/i;
 
 /**
  * @param {string} specifier
@@ -799,14 +775,6 @@ function parsePackageName(specifier, base) {
   return { packageName, packageSubpath, isScoped };
 }
 
-/**
- * @param {string} specifier
- * @returns {boolean}
- */
-function isBareSpecifier(specifier) {
-  return specifier[0] && specifier[0] !== "/" && specifier[0] !== ".";
-}
-
 function isRelativeSpecifier(specifier) {
   if (specifier[0] === ".") {
     if (specifier.length === 1 || specifier[1] === "/") return true;
@@ -823,61 +791,11 @@ function shouldBeTreatedAsRelativeOrAbsolutePath(specifier) {
   return isRelativeSpecifier(specifier);
 }
 
-/**
- * Try to resolve an import as a CommonJS module
- * @param {string} specifier
- * @param {string} parentURL
- * @returns {boolean|string}
- */
-function resolveAsCommonJS(specifier, parentURL) {
-  try {
-    const parent = fileURLToPath(parentURL);
-    const tmpModule = new CJSModule(parent, null);
-    tmpModule.paths = CJSModule._nodeModulePaths(parent);
-
-    let found = CJSModule._resolveFilename(specifier, tmpModule, false);
-
-    // If it is a relative specifier return the relative path
-    // to the parent
-    if (isRelativeSpecifier(specifier)) {
-      found = relative(parent, found);
-      // Add '.separator if the path does not start with '..separator'
-      // This should be a safe assumption because when loading
-      // esm modules there should be always a file specified so
-      // there should not be a specifier like '..' or '.'
-      if (!StringPrototypeStartsWith(found, `..${sep}`)) {
-        found = `.${sep}${found}`;
-      }
-    } else if (isBareSpecifier(specifier)) {
-      // If it is a bare specifier return the relative path within the
-      // module
-      const pkg = StringPrototypeSplit(specifier, "/")[0];
-      const index = StringPrototypeIndexOf(found, pkg);
-      if (index !== -1) {
-        found = StringPrototypeSlice(found, index);
-      }
-    }
-    // Normalize the path separator to give a valid suggestion
-    // on Windows
-    if (process.platform === "win32") {
-      found = RegExpPrototypeSymbolReplace(
-        new RegExp(`\\${sep}`, "g"),
-        found,
-        "/"
-      );
-    }
-    return found;
-  } catch {
-    return false;
-  }
-}
-
 export {
   getConditionsSet,
   getPackageConfig,
   getPackageScopeConfig,
   shouldBeTreatedAsRelativeOrAbsolutePath,
-  resolveAsCommonJS,
   packageImportsResolve,
   packageExportsResolve,
   parsePackageName,
