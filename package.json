@@ -18,6 +18,6 @@
     "build": "tsc && cp -a ./src/support ./lib/support",
     "rebuild": "yarn clean && yarn build",
     "clean": "rm -rf lib",
-    "try": "yarn build && cd ./examples/example1 && TS_NODE_PROJECT=./packages/server/tsconfig.json node --loader ../../lib/myloader.js --experimental-specifier-resolution=node --enable-source-maps ./packages/server/src/server.ts"
+    "try": "yarn build && cd ./examples/example1 && TS_NODE_PROJECT=./packages/server/tsconfig.json node --loader ../esbuild-loader/loader.mjs --experimental-specifier-resolution=node --enable-source-maps ./packages/server/src/server.ts"
   }
 }
