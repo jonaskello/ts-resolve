@@ -1,11 +1,11 @@
+// Extracted from this file: https://github.com/nodejs/node/blob/master/lib/internal/modules/esm/resolve.js
+
 // "use strict";
 
 export const foo = 42;
 
 const {
   ArrayIsArray,
-  ArrayPrototypeJoin,
-  ArrayPrototypeShift,
   JSONParse,
   JSONStringify,
   ObjectFreeze,
@@ -127,41 +127,6 @@ function emitTrailingSlashPatternDeprecation(match, pjsonUrl, isExports, base) {
     "DeprecationWarning",
     "DEP0155"
   );
-}
-
-/**
- * @param {URL} url
- * @param {URL} packageJSONUrl
- * @param {string | URL | undefined} base
- * @param {string} main
- * @returns
- */
-function emitLegacyIndexDeprecation(url, packageJSONUrl, base, main) {
-  const format = defaultGetFormat(url);
-  if (format !== "module") return;
-  const path = fileURLToPath(url);
-  const pkgPath = fileURLToPath(new URL(".", packageJSONUrl));
-  const basePath = fileURLToPath(base);
-  if (main)
-    process.emitWarning(
-      `Package ${pkgPath} has a "main" field set to ${JSONStringify(main)}, ` +
-        `excluding the full filename and extension to the resolved file at "${StringPrototypeSlice(
-          path,
-          pkgPath.length
-        )}", imported from ${basePath}.\n Automatic extension resolution of the "main" field is ` +
-        "deprecated for ES modules.",
-      "DeprecationWarning",
-      "DEP0151"
-    );
-  else
-    process.emitWarning(
-      `No "main" or "exports" field defined in the package.json for ${pkgPath} resolving the main entry point "${StringPrototypeSlice(
-        path,
-        pkgPath.length
-      )}", imported from ${basePath}.\nDefault "index" lookups for the main are deprecated for ES modules.`,
-      "DeprecationWarning",
-      "DEP0151"
-    );
 }
 
 /**
@@ -907,8 +872,7 @@ function resolveAsCommonJS(specifier, parentURL) {
   }
 }
 
-module.exports = {
-  emitLegacyIndexDeprecation,
+export {
   getConditionsSet,
   getPackageConfig,
   getPackageScopeConfig,
@@ -919,6 +883,3 @@ module.exports = {
   parsePackageName,
   getPackageType,
 };
-
-// cycle
-const { defaultGetFormat } = require("./support/get_format");

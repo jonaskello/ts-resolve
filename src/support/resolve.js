@@ -853,7 +853,7 @@ function patternKeyCompare(a, b) {
  * @param {Set<string>} conditions
  * @returns
  */
-function packageImportsResolve(name, base, conditions) {
+function packageImportsResolve(packageResolve, name, base, conditions) {
   if (name === "#" || StringPrototypeStartsWith(name, "#/")) {
     const reason = "is not a valid internal imports specifier name";
     throw new ERR_INVALID_MODULE_SPECIFIER(name, reason, fileURLToPath(base));
@@ -870,6 +870,7 @@ function packageImportsResolve(name, base, conditions) {
         !StringPrototypeEndsWith(name, "/")
       ) {
         const resolved = resolvePackageTarget(
+          packageResolve,
           packageJSONUrl,
           imports[name],
           "",
@@ -922,6 +923,7 @@ function packageImportsResolve(name, base, conditions) {
           const target = imports[bestMatch];
           const pattern = StringPrototypeIncludes(bestMatch, "*");
           const resolved = resolvePackageTarget(
+            packageResolve,
             packageJSONUrl,
             target,
             bestMatchSubpath,

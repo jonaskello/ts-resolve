@@ -4,7 +4,7 @@ import path from "path";
 import { loadTsConfigAndResolveReferences, Tsconfig } from "./tsconfig-loader";
 const { statSync, Stats } = require("fs");
 
-const {
+import {
   getPackageConfig, // getPackageConfig does filesystem access
   getPackageScopeConfig, // getPackageScopeConfig calls getPackageConfig
   shouldBeTreatedAsRelativeOrAbsolutePath,
@@ -12,7 +12,7 @@ const {
   getConditionsSet,
   packageImportsResolve,
   packageExportsResolve,
-} = require("./resolve_nofs");
+} from "./resolve_utils";
 
 type TsConfigInfo = {
   tsconfigMap: Map<string, Tsconfig>;
