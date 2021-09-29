@@ -163,13 +163,14 @@ function tsModuleResolve(
     // Convert path (useful if the specifier was a reference to a package which is in the same composite project)
     // If the resolution resulted in a symlink then use the real path instead
     const realPossibleUrl = realPathOfSymlinkedUrl(possibleUrl);
-    const possibleSourceUrl = convertTypescriptOutUrlToSourceUrl(
+    const possibleSourceLocation = convertTypescriptOutUrlToSourceLocation(
       tsConfigInfo,
       realPossibleUrl
     );
-    if (possibleSourceUrl !== undefined) {
+    if (possibleSourceLocation !== undefined) {
+      const { fileUrl, tsConfigAbsPath } = possibleSourceLocation;
       //
-      const tsFile = probeForTsFileInSamePathAsJsFile(possibleSourceUrl);
+      const tsFile = probeForTsFileInSamePathAsJsFile(fileUrl);
       if (tsFile !== undefined) {
         console.log("---------> RESOLVED BARE SPECIFIER: ", tsFile.href);
         // finalizeResolution checks for old file endings if getOptionValue("--experimental-specifier-resolution") === "node"
@@ -177,7 +178,7 @@ function tsModuleResolve(
         const finalizedUrl = tsFile;
         return {
           fileUrl: `${finalizedUrl}`,
-          tsConfigUrl: "typescript",
+          tsConfigUrl: pathToFileURL(tsConfigAbsPath).href,
         };
       }
     }
@@ -190,10 +191,10 @@ function tsModuleResolve(
  * Given an URL that a TS file will emit a JS file to when compiled, convert that back to the URL
  * for the source TS file.
  */
-function convertTypescriptOutUrlToSourceUrl(
+function convertTypescriptOutUrlToSourceLocation(
   tsConfigInfo: TsConfigInfo,
   outFileUrl: URL
-): URL | undefined {
+): { fileUrl: URL; tsConfigAbsPath: string } | undefined {
   const outFilePath = fileURLToPath(outFileUrl);
   let absOutDir: string | undefined = undefined;
   let tsConfigAbsPath: string | undefined = undefined;
@@ -227,7 +228,7 @@ function convertTypescriptOutUrlToSourceUrl(
     const remaining = outFilePath.substr(absOutDir.length);
     const convertedPath = path.join(absRootDir, remaining);
     console.log("---->CONVERTED PATH", convertedPath);
-    return pathToFileURL(convertedPath);
+    return { fileUrl: pathToFileURL(convertedPath), tsConfigAbsPath };
   }
   return undefined;
 }
