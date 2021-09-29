@@ -125,7 +125,7 @@ function tsModuleResolve(
       // This file belongs to the same TsConfig as it's ParentUrl, but we don't know
       // which TsConfig the ParentUrl belongs to....
       // Or is it allowed in typescript composite project to make a relative import to a file in a different TsConfig?
-      return { fileUrl: `${tsFileUrl}`, tsConfigUrl: "SameAsParent" };
+      return { fileUrl: tsFileUrl.href, tsConfigUrl: "SameAsParent" };
     }
     return undefined;
   }
@@ -177,7 +177,7 @@ function tsModuleResolve(
         // const finalizedUrl = finalizeResolution(tsFile, base);
         const finalizedUrl = tsFile;
         return {
-          fileUrl: `${finalizedUrl}`,
+          fileUrl: finalizedUrl.href,
           tsConfigUrl: pathToFileURL(tsConfigAbsPath).href,
         };
       }
