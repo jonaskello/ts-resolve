@@ -21,14 +21,14 @@ type TsConfigInfo = {
 
 const entryTsConfigInfoCache: Map<string, TsConfigInfo> = new Map();
 
-type ResolveContext = {
+export type ResolveContext = {
   conditions: string[];
   parentURL: string | undefined;
 };
 
-type ResolveReturn = {
-  format?: null | undefined | string;
-  url: string;
+export type ResolveReturn = {
+  tsConfigUrl: string;
+  fileUrl: string;
 };
 
 /**
@@ -71,10 +71,10 @@ export function tsResolve(
   // import of .ts files
   if (isTypescriptFile(specifier)) {
     const url = new URL(specifier, parentURL).href;
-    return { url };
+    return { fileUrl: url, tsConfigUrl: "EntryPoint" };
   }
 
-  // Try to resolve to a typescript file
+  // Try to resolve to a typescript file, returns undefined if it could not be resolved
   const conditionsSet = getConditionsSet(conditions);
   const resolved = myModuleResolve(
     specifier,
@@ -82,14 +82,17 @@ export function tsResolve(
     conditionsSet,
     tsConfigInfo
   );
-  if (resolved !== undefined) {
-    const [url, format] = resolved;
-    console.log("it was resolved", url.href, format);
-    return { url: `${url}`, format };
-  }
 
-  // Not resolved as typescript, forward to default resolve
-  return undefined;
+  return resolved;
+
+  // if (resolved !== undefined) {
+  //   const { fileUrl, tsConfigUrl } = resolved;
+  //   console.log("it was resolved", url.href, format);
+  //   return { fileUrl: `${url}`, tsConfigUrl: format };
+  // }
+
+  // // Not resolved as typescript, forward to default resolve
+  // return undefined;
 }
 
 /**
@@ -103,7 +106,7 @@ function myModuleResolve(
   base: string | undefined,
   conditions: Set<string>,
   tsConfigInfo: TsConfigInfo
-): readonly [URL, string] | undefined {
+): ResolveReturn | undefined {
   console.log("myModuleResolve: START");
 
   // Resolve path specifiers
@@ -132,7 +135,7 @@ function myModuleResolve(
       // This file belongs to the same TsConfig as it's ParentUrl, but we don't know
       // which TsConfig the ParentUrl belongs to....
       // Or is it allowed in typescript composite project to make a relative import to a file in a different TsConfig?
-      return [tsFileUrl, "SameAsParent"];
+      return { fileUrl: `${tsFileUrl}`, tsConfigUrl: "SameAsParent" };
     }
     return undefined;
   }
@@ -182,7 +185,10 @@ function myModuleResolve(
         // finalizeResolution checks for old file endings if getOptionValue("--experimental-specifier-resolution") === "node"
         // const finalizedUrl = finalizeResolution(tsFile, base);
         const finalizedUrl = tsFile;
-        return [finalizedUrl, "typescript"];
+        return {
+          fileUrl: `${finalizedUrl}`,
+          tsConfigUrl: "typescript",
+        };
       }
     }
     // }

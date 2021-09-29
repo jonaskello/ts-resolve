@@ -15,7 +15,8 @@ import { tsResolve } from "../../lib/ts-resolve.js";
 export function resolve(specifier, context, defaultResolve) {
   const resolved = tsResolve(specifier, context);
   if (resolved !== undefined) {
-    return resolved;
+    const { fileUrl, tsConfigUrl } = resolved;
+    return { url: fileUrl, format: tsConfigUrl };
   }
   return defaultResolve(specifier, context, defaultResolve);
 }
