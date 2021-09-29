@@ -23,8 +23,8 @@ const {
   StringPrototypeLastIndexOf,
   StringPrototypeSlice,
   StringPrototypeStartsWith,
-} = require("./support/node-primordials");
-const { getOptionValue } = require("./support/node-options");
+} = require("./resolve-utils-support/node-primordials");
+const { getOptionValue } = require("./resolve-utils-support/node-options");
 // Do not eagerly grab .manifest, it may be in TDZ
 const policy = getOptionValue("--experimental-policy")
   ? require("internal/process/policy")
@@ -38,9 +38,9 @@ const {
   ERR_INVALID_PACKAGE_TARGET,
   ERR_PACKAGE_IMPORT_NOT_DEFINED,
   ERR_PACKAGE_PATH_NOT_EXPORTED,
-} = require("./support/node-errors").codes;
+} = require("./resolve-utils-support/node-errors").codes;
 
-const packageJsonReader = require("./support/node-package-json-reader.js");
+const packageJsonReader = require("./resolve-utils-support/node-package-json-reader.js");
 const userConditions = getOptionValue("--conditions");
 const noAddons = getOptionValue("--no-addons");
 const addonConditions = noAddons ? [] : ["node-addons"];

@@ -1,8 +1,8 @@
 module.exports = {
   ArrayFrom: Array.from,
   ArrayIsArray: Array.isArray,
-  ArrayPrototypeJoin: (obj, separator) =>
-    Array.prototype.join.call(obj, separator),
+  // ArrayPrototypeJoin: (obj, separator) =>
+  //   Array.prototype.join.call(obj, separator),
   ArrayPrototypeShift: (obj) => Array.prototype.shift.call(obj),
   ArrayPrototypeForEach: (arr, ...rest) =>
     Array.prototype.forEach.apply(arr, rest),

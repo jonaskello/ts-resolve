@@ -1,6 +1,8 @@
 // copied from https://github.com/nodejs/node/blob/v15.3.0/lib/internal/modules/package_json_reader.js
 "use strict";
 
+export const foo = 42;
+
 const { SafeMap } = require("./node-primordials");
 const { internalModuleReadJSON } = require("./node-internal-fs");
 const { pathToFileURL } = require("url");

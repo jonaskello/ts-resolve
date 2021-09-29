@@ -15,7 +15,8 @@
     "typescript": "^4.4.3"
   },
   "scripts": {
-    "build": "tsc && cp -a ./src/support ./lib/support",
+    "build_old": "tsc && cp -a ./src/support ./lib/support",
+    "build": "tsc",
     "rebuild": "yarn clean && yarn build",
     "clean": "rm -rf lib",
     "try": "yarn build && cd ./examples/example1 && TS_NODE_PROJECT=./packages/server/tsconfig.json node --loader ../esbuild-loader/loader.mjs --experimental-specifier-resolution=node --enable-source-maps ./packages/server/src/server.ts"
