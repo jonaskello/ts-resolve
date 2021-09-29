@@ -14,8 +14,6 @@ const {
   packageExportsResolve,
 } = require("./resolve_nofs");
 
-// const { finalizeResolution } = require("./resolve_fs");
-
 type TsConfigInfo = {
   tsconfigMap: Map<string, Tsconfig>;
   absOutDirToTsConfig: Map<string, string>;
