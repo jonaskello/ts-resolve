@@ -76,23 +76,13 @@ export function tsResolve(
 
   // Try to resolve to a typescript file, returns undefined if it could not be resolved
   const conditionsSet = getConditionsSet(conditions);
-  const resolved = myModuleResolve(
+  const resolved = tsModuleResolve(
     specifier,
     parentURL,
     conditionsSet,
     tsConfigInfo
   );
-
   return resolved;
-
-  // if (resolved !== undefined) {
-  //   const { fileUrl, tsConfigUrl } = resolved;
-  //   console.log("it was resolved", url.href, format);
-  //   return { fileUrl: `${url}`, tsConfigUrl: format };
-  // }
-
-  // // Not resolved as typescript, forward to default resolve
-  // return undefined;
 }
 
 /**
@@ -101,17 +91,17 @@ export function tsResolve(
  * @param {Set<string>} conditions
  * @returns {URL}
  */
-function myModuleResolve(
+function tsModuleResolve(
   specifier: string,
   base: string | undefined,
   conditions: Set<string>,
   tsConfigInfo: TsConfigInfo
 ): ResolveReturn | undefined {
-  console.log("myModuleResolve: START");
+  console.log("tsModuleResolve: START");
 
   // Resolve path specifiers
   if (shouldBeTreatedAsRelativeOrAbsolutePath(specifier)) {
-    console.log("myModuleResolve: resolveFilePath");
+    console.log("tsModuleResolve: resolveFilePath");
     const resolved = new URL(specifier, base);
     // console.log("myModuleResolve: tsConfigInfo", tsConfigInfo);
     // const tsConfigAbsPath = getTsConfigAbsPathForOutFile(
@@ -482,113 +472,3 @@ function buildTsConfigInfo(entryTsConfig: string): TsConfigInfo {
     absOutDirToTsConfig,
   };
 }
-
-// const encodedSepRegEx = /%2F|%2C/i;
-// function assertValidModuleSpecifier(resolved) {
-//   if (encodedSepRegEx.test(resolved.pathname))
-//     throw new ERR_INVALID_MODULE_SPECIFIER(
-//       resolved.pathname,
-//       'must not include encoded "/" or "\\" characters',
-//       fileURLToPath(base)
-//     );
-// }
-
-// /**
-//  * @param {URL} resolved
-//  * @param {string | URL | undefined} base
-//  * @returns {URL | undefined}
-//  */
-// function finalizeResolution(
-//   resolved,
-//   base: string | URL | undefined,
-//   asNodeSpecifier: boolean
-// ): URL | undefined {
-//   console.log(
-//     "finalizeResolutionfinalizeResolutionfinalizeResolution-->",
-//     typeof resolved
-//   );
-//   assertValidModuleSpecifier(resolved);
-
-//   const thePath = fileURLToPath(resolved);
-//   if (asNodeSpecifier) {
-//     return finalizeResolutionAsNodeSpecifier(resolved, base, thePath);
-//   }
-//   return finalizeResolutionAsEsmSpecifier(resolved, thePath, base);
-// }
-
-// function finalizeResolutionAsNodeSpecifier(resolved, base, thePath) {
-//   let file = resolveExtensionsWithTryExactName(resolved);
-//   if (file !== undefined) return file;
-//   if (!thePath.endsWith("/")) {
-//     file = resolveDirectoryEntry(new URL(`${resolved}/`));
-//     if (file !== undefined) return file;
-//   } else {
-//     return resolveDirectoryEntry(resolved) || resolved;
-//   }
-//   throw new ERR_MODULE_NOT_FOUND(
-//     resolved.pathname,
-//     fileURLToPath(base),
-//     "module"
-//   );
-// }
-
-// function finalizeResolutionAsEsmSpecifier(resolved, thePath, base) {
-//   const stats = tryStatSync(thePath.endWith("/") ? thePath.slice(-1) : thePath);
-//   if (stats.isDirectory()) {
-//     const err = new ERR_UNSUPPORTED_DIR_IMPORT(thePath, fileURLToPath(base));
-//     err.url = String(resolved);
-//     throw err;
-//   } else if (!stats.isFile()) {
-//     throw new ERR_MODULE_NOT_FOUND(
-//       thePath || resolved.pathname,
-//       base && fileURLToPath(base),
-//       "module"
-//     );
-//   }
-
-//   return resolved;
-// }
-
-// /**
-//  * @param {URL} search
-//  * @returns {URL | undefined}
-//  */
-// function resolveDirectoryEntry(search) {
-//   const dirPath = fileURLToPath(search);
-//   const pkgJsonPath = path.resolve(dirPath, "package.json");
-//   if (fileExists(pkgJsonPath)) {
-//     const pkgJson = packageJsonReader.read(pkgJsonPath);
-//     if (pkgJson.containsKeys) {
-//       const { main } = JSON.parse(pkgJson.string);
-//       if (main != null) {
-//         const mainUrl = pathToFileURL(path.resolve(dirPath, main));
-//         return resolveExtensionsWithTryExactName(mainUrl);
-//       }
-//     }
-//   }
-//   return resolveExtensions(new URL("index", search));
-// }
-
-// /**
-//  * @param {URL} search
-//  * @returns {URL | undefined}
-//  */
-// function resolveExtensionsWithTryExactName(search) {
-//   if (fileExists(search)) return search;
-//   return resolveExtensions(search);
-// }
-
-// const extensions = [".js", ".json", ".node", ".mjs"];
-
-// /**
-//  * @param {URL} search
-//  * @returns {URL | undefined}
-//  */
-// function resolveExtensions(search) {
-//   for (let i = 0; i < extensions.length; i++) {
-//     const extension = extensions[i];
-//     const guess = new URL(`${search.pathname}${extension}`, search);
-//     if (fileExists(guess)) return guess;
-//   }
-//   return undefined;
-// }
