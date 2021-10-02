@@ -2,7 +2,6 @@ import { URL, pathToFileURL, fileURLToPath } from "url";
 import fs from "fs";
 import path from "path";
 import { loadTsConfigAndResolveReferences, Tsconfig } from "./tsconfig-loader";
-const { statSync, Stats } = require("fs");
 
 import {
   getPackageConfig, // getPackageConfig does filesystem access
@@ -436,7 +435,7 @@ function legacyMainResolve2(packageJSONUrl, packageConfig): ReadonlyArray<URL> {
  * @returns {import('fs').Stats}
  */
 const tryStatSync = (path) =>
-  statSync(path, { throwIfNoEntry: false }) ?? new Stats();
+  fs.statSync(path, { throwIfNoEntry: false }) ?? new fs.Stats();
 
 /**
  * @param {string | URL} url
@@ -444,7 +443,7 @@ const tryStatSync = (path) =>
  */
 function fileExists(url) {
   try {
-    return statSync(url, { throwIfNoEntry: false })?.isFile() ?? false;
+    return fs.statSync(url, { throwIfNoEntry: false })?.isFile() ?? false;
   } catch (e) {
     return false;
   }
