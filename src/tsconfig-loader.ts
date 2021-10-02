@@ -1,5 +1,4 @@
 import * as path from "path";
-import * as fs from "fs";
 // tslint:disable:no-require-imports
 import JSON5 = require("json5");
 import StripBom = require("strip-bom");
@@ -25,8 +24,8 @@ export interface Tsconfig {
 
 export function loadTsconfig(
   configFilePath: string,
-  existsSync: (path: string) => boolean = fs.existsSync,
-  readFileSync: (filename: string) => string = (filename: string) => fs.readFileSync(filename, "utf8")
+  existsSync: (path: string) => boolean,
+  readFileSync: (filename: string) => string
 ): Tsconfig | undefined {
   if (!existsSync(configFilePath)) {
     return undefined;

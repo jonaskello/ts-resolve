@@ -408,28 +408,6 @@ function legacyMainResolve2(packageJSONUrl, packageConfig): ReadonlyArray<URL> {
   return guess;
 }
 
-// // /**
-// //  * @param {string | URL} path
-// //  * @returns {import('fs').Stats}
-// //  */
-// // const tryStatSync = (path) =>
-// //   fs.statSync(path, { throwIfNoEntry: false }) ?? new fs.Stats();
-
-// const isDirectory = (path): boolean =>
-//   fs.statSync(path, { throwIfNoEntry: false })?.isDirectory() ?? false;
-
-// /**
-//  * @param {string | URL} url
-//  * @returns {boolean}
-//  */
-// function fileExists(url) {
-//   try {
-//     return fs.statSync(url, { throwIfNoEntry: false })?.isFile() ?? false;
-//   } catch (e) {
-//     return false;
-//   }
-// }
-
 function isTypescriptFile(url) {
   const extensionsRegex = /\.ts$/;
   return extensionsRegex.test(url);
