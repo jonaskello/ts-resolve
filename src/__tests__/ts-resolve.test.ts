@@ -50,10 +50,10 @@ test("Resolve entry file", () => {
   expect(resolved.fileUrl).toBe("file:///root/packages/server/src/server.ts");
 });
 
-test.only("Relative resolve", () => {
+test("Relative resolve", () => {
   const resolved = tsResolve(
-    "./start-server.ts",
-    { conditions: [], parentURL: "/root/packages/server/src/server.ts" },
+    "./start-server.js",
+    { conditions: [], parentURL: "file:///root/packages/server/src/server.ts" },
     entryTsConfig,
     fileSystem
   );

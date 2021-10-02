@@ -86,6 +86,12 @@ export function tsResolve(
   // This can only happen for the entry file as typescript does not allow
   // import of .ts files
   if (isTypescriptFile(specifier)) {
+    // Assert this is the entry
+    if (parentURLIn !== undefined) {
+      throw new Error(
+        "Typescript files (*.ts/tsx) can only used as entry file, not be imported (this should never happen)."
+      );
+    }
     console.log("specifier, parentURL", specifier, parentURL);
     const absFilePath = path.join(parentURL, specifier);
     const url = pathToFileURL(absFilePath);
@@ -115,7 +121,7 @@ function tsModuleResolve(
 
   // Resolve path specifiers
   if (shouldBeTreatedAsRelativeOrAbsolutePath(specifier)) {
-    console.log("tsModuleResolve: resolveFilePath");
+    console.log("tsModuleResolve: resolveFilePath", specifier, base);
     const resolved = new URL(specifier, base);
     // console.log("myModuleResolve: tsConfigInfo", tsConfigInfo);
     // const tsConfigAbsPath = getTsConfigAbsPathForOutFile(

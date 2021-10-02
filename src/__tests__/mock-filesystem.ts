@@ -37,6 +37,7 @@ export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
       return undefined;
     },
     readFile: (path: string) => {
+      console.log("MOCK: readFile", path);
       const entry = mfs[path];
       if (entry.type === "FileEntry") {
         return entry.content;
