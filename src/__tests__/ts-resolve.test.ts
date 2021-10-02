@@ -4,7 +4,16 @@ import { MockFilesystem, createFilesystem } from "./mock-filesystem";
 const mfs: MockFilesystem = {
   // server
   "/root/packages/server/package.json": { type: "FileEntry", content: "" },
-  "/root/packages/server/tsconfig.json": { type: "FileEntry", content: "" },
+  "/root/packages/server/tsconfig.json": {
+    type: "FileEntry",
+    content: JSON.stringify({
+      compilerOptions: {
+        outDir: "lib",
+        rootDir: "src",
+      },
+      references: [{ path: "../shared" }],
+    }),
+  },
   "/root/packages/server/src/server.ts": { type: "FileEntry", content: "import { startServer } from './start-server'" },
   "/root/packages/server/src/start-server.ts": {
     type: "FileEntry",
@@ -12,7 +21,15 @@ const mfs: MockFilesystem = {
   },
   // shared
   "/root/packages/shared/package.json": { type: "FileEntry", content: "" },
-  "/root/packages/shared/tsconfig.json": { type: "FileEntry", content: "" },
+  "/root/packages/shared/tsconfig.json": {
+    type: "FileEntry",
+    content: JSON.stringify({
+      compilerOptions: {
+        outDir: "lib",
+        rootDir: "src",
+      },
+    }),
+  },
   // node_modules
   "/root/node_modules/@app/server": { type: "LinkEntry", realPath: "packages/server" },
   "/root/node_modules/@app/shared": { type: "LinkEntry", realPath: "packages/server" },
@@ -30,7 +47,7 @@ test("Resolve entry file", () => {
     entryTsConfig,
     fileSystem
   );
-  expect(resolved.fileUrl).toBe("file:///abs/working/dir/packages/server/src/server.ts");
+  expect(resolved.fileUrl).toBe("file:///root/packages/server/src/server.ts");
 });
 
 test.only("Relative resolve", () => {
@@ -40,5 +57,5 @@ test.only("Relative resolve", () => {
     entryTsConfig,
     fileSystem
   );
-  expect(resolved.fileUrl).toBe("file:///abs/working/dir/hello.ts");
+  expect(resolved.fileUrl).toBe("file:///root/packages/server/src/start-server.ts");
 });
