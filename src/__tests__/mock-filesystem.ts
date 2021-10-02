@@ -2,14 +2,13 @@ import { dirname } from "path";
 import { FileSystem } from "../filesystem";
 
 export type MockFilesystem = {
-  [path: string]: Entry;
+  readonly [path: string]: Entry;
 };
 
-export type Entry = JsonFileEntry | TsFileEntry | LinkEntry; //| DirEntry;
+export type Entry = JsonFileEntry | TsFileEntry | LinkEntry;
 
 export type JsonFileEntry = { type: "JsonFileEntry"; json: object };
 export type TsFileEntry = { type: "TsFileEntry"; imports: ReadonlyArray<string> };
-// export type DirEntry = { type: "DirEntry" };
 export type LinkEntry = { type: "LinkEntry"; realPath: string };
 
 export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
@@ -17,17 +16,22 @@ export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
     cwd: () => cwd,
     fileExists: (path: string) => {
       const result = isFileEntry(mfs[path]);
-      console.log("MOCK: fileExists", path, result);
+      // console.log("MOCK: fileExists", path, result);
       return result;
     },
-    isDirectory: isDirectory(mfs, cwd),
+    isDirectory: isDirectory(mfs),
     getRealpath: (path: string) => {
+      // Should return undefined if the path does not exist
+      if (!pathExists(mfs, path)) {
+        return undefined;
+      }
+      // If the path is a link, return realpath, otherwise just return same path
       const entry = mfs[path];
       let result = path;
       if (entry !== undefined && entry.type === "LinkEntry") {
         result = entry.realPath;
       }
-      console.log("MOCK: getRealpath", path, result);
+      // console.log("MOCK: getRealpath", path, result);
       return result;
     },
     readFile: (path: string) => {
@@ -36,14 +40,21 @@ export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
       if (entry !== undefined && entry.type === "JsonFileEntry") {
         result = JSON.stringify(entry.json);
       }
-      console.log("MOCK: readFile", path, result);
+      // console.log("MOCK: readFile", path, result);
       return result;
     },
   };
 }
 
+function pathExists(mfs: MockFilesystem, path: string): boolean {
+  for (const key of Object.keys(mfs)) {
+    if (key.startsWith(path)) return true;
+  }
+  return false;
+}
+
 const isDirectory =
-  (mfs: MockFilesystem, cwd: string) =>
+  (mfs: MockFilesystem) =>
   (path: string): boolean => {
     let result = false;
     for (let [entryPath, entry] of Object.entries(mfs)) {
@@ -61,7 +72,7 @@ const isDirectory =
         }
       }
     }
-    console.log("MOCK: isDirectory", path, result);
+    // console.log("MOCK: isDirectory", path, result);
     return result;
   };
 

@@ -43,6 +43,7 @@ const mfs: MockFilesystem = {
       },
     },
   },
+  "/root/packages/shared/src/index.ts": { type: "TsFileEntry", imports: [] },
   // node_modules
   "/root/node_modules/@app/server": { type: "LinkEntry", realPath: "/root/packages/server" },
   "/root/node_modules/@app/shared": { type: "LinkEntry", realPath: "/root/packages/shared" },

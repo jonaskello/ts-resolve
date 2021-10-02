@@ -242,18 +242,13 @@ function convertTypescriptOutUrlToSourceLocation(
  */
 function realPathOfSymlinkedUrl(inputUrl: URL, getRealPath: GetRealpath): URL {
   const pathString = fileURLToPath(inputUrl);
-  // console.log("realPathOfSymlinkedUrl--START", pathString);
+  console.log("realPathOfSymlinkedUrl--START", pathString);
   const pathParts = pathString.substr(1).split(path.sep);
   let existingRealPath = "/";
   let i: number;
   for (i = 0; i < pathParts.length; i++) {
     const pp = pathParts[i];
     const checkPath = path.join(existingRealPath, pp);
-    // try {
-    //   existingRealPath = fs.realpathSync(checkPath);
-    // } catch (e) {
-    //   break;
-    // }
     const newRealpath = getRealPath(checkPath);
     if (newRealpath === undefined) {
       break;
@@ -261,7 +256,7 @@ function realPathOfSymlinkedUrl(inputUrl: URL, getRealPath: GetRealpath): URL {
     existingRealPath = newRealpath;
   }
   const fullPath = path.join(existingRealPath, ...pathParts.slice(i));
-  // console.log("realPathOfSymlinkedUrl--END", fullPath);
+  console.log("realPathOfSymlinkedUrl--END", fullPath);
   return pathToFileURL(fullPath);
 }
 
