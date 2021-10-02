@@ -5,7 +5,7 @@ test("Simple resolve", () => {
     "./hello.ts",
     { conditions: [], parentURL: undefined },
     "",
-    "/abs/working/dir"
+    { cwd: () => "/abs/working/dir", fileExists: () => false }
   );
   expect(resolved.fileUrl).toBe("file:///abs/working/dir/hello.ts");
 });

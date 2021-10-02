@@ -21,13 +21,18 @@ type TsConfigInfo = {
 const entryTsConfigInfoCache: Map<string, TsConfigInfo> = new Map();
 
 export type ResolveContext = {
-  conditions: string[];
-  parentURL: string | undefined;
+  readonly conditions: ReadonlyArray<string>;
+  readonly parentURL: string | undefined;
 };
 
 export type ResolveReturn = {
-  tsConfigUrl: string;
-  fileUrl: string;
+  readonly tsConfigUrl: string;
+  readonly fileUrl: string;
+};
+
+export type FileSystem = {
+  readonly cwd: () => string;
+  readonly fileExists: (path: string) => boolean;
 };
 
 /**
@@ -38,7 +43,7 @@ export function tsResolve(
   specifier: string,
   context: ResolveContext,
   tsConfigPathIn?: string | undefined,
-  cwd?: string | undefined
+  fileSystem?: FileSystem | undefined
 ): ResolveReturn | undefined {
   // Let node handle `data:` and `node:` prefix etc.
   const excludeRegex = /^\w+:/;
@@ -59,7 +64,7 @@ export function tsResolve(
   let { parentURL: parentURLIn, conditions } = context;
 
   // If parentURL was not specified, then we use cwd
-  const parentURL = parentURLIn ?? cwd ?? process.cwd();
+  const parentURL = parentURLIn ?? fileSystem?.cwd() ?? process.cwd();
   console.log("RESOLVE: parentURL", parentURL);
 
   // Build tsconfig map if we don't have it
