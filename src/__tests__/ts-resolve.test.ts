@@ -9,6 +9,7 @@ test("Simple resolve", () => {
       cwd: () => "/abs/working/dir",
       fileExists: () => false,
       isDirectory: () => false,
+      getRealpath: () => undefined,
     }
   );
   expect(resolved.fileUrl).toBe("file:///abs/working/dir/hello.ts");

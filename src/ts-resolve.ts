@@ -16,6 +16,7 @@ import {
   createDefaultFilesystem,
   FileExists,
   FileSystem,
+  GetRealpath,
   IsDirectory,
 } from "./filesystem";
 
@@ -191,7 +192,10 @@ function tsModuleResolve(
   for (const possibleUrl of possibleUrls) {
     // Convert path (useful if the specifier was a reference to a package which is in the same composite project)
     // If the resolution resulted in a symlink then use the real path instead
-    const realPossibleUrl = realPathOfSymlinkedUrl(possibleUrl);
+    const realPossibleUrl = realPathOfSymlinkedUrl(
+      possibleUrl,
+      fileSystem.getRealpath
+    );
     const possibleSourceLocation = convertTypescriptOutUrlToSourceLocation(
       tsConfigInfo,
       realPossibleUrl
@@ -270,7 +274,7 @@ function convertTypescriptOutUrlToSourceLocation(
  * If a starting part of the path exists, it will be converted to a real path,
  * and then the rest of the path (the non-existing part) will be added to the end.
  */
-function realPathOfSymlinkedUrl(inputUrl: URL): URL {
+function realPathOfSymlinkedUrl(inputUrl: URL, getRealPath: GetRealpath): URL {
   const pathString = fileURLToPath(inputUrl);
   // console.log("realPathOfSymlinkedUrl--START", pathString);
   const pathParts = pathString.substr(1).split(path.sep);
@@ -278,12 +282,17 @@ function realPathOfSymlinkedUrl(inputUrl: URL): URL {
   let i: number;
   for (i = 0; i < pathParts.length; i++) {
     const pp = pathParts[i];
-    try {
-      const checkPath = path.join(existingRealPath, pp);
-      existingRealPath = fs.realpathSync(checkPath);
-    } catch (e) {
+    const checkPath = path.join(existingRealPath, pp);
+    // try {
+    //   existingRealPath = fs.realpathSync(checkPath);
+    // } catch (e) {
+    //   break;
+    // }
+    const newRealpath = getRealPath(checkPath);
+    if (newRealpath === undefined) {
       break;
     }
+    existingRealPath = newRealpath;
   }
   const fullPath = path.join(existingRealPath, ...pathParts.slice(i));
   // console.log("realPathOfSymlinkedUrl--END", fullPath);

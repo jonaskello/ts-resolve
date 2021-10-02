@@ -3,11 +3,13 @@ import fs from "fs";
 export type FileSystem = {
   readonly cwd: () => string;
   readonly fileExists: FileExists;
-  readonly isDirectory: (path) => boolean;
+  readonly isDirectory: IsDirectory;
+  readonly getRealpath: GetRealpath;
 };
 
 export type FileExists = (path: string) => boolean;
 export type IsDirectory = (path: string) => boolean;
+export type GetRealpath = (path: string) => string | undefined;
 
 export function createDefaultFilesystem(): FileSystem {
   return {
@@ -21,5 +23,12 @@ export function createDefaultFilesystem(): FileSystem {
     },
     isDirectory: (path: string) =>
       fs.statSync(path, { throwIfNoEntry: false })?.isDirectory() ?? false,
+    getRealpath: (path: string) => {
+      try {
+        return fs.realpathSync(path);
+      } catch (e) {
+        return undefined;
+      }
+    },
   };
 }
