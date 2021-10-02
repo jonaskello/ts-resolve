@@ -5,9 +5,10 @@ export type MockFilesystem = {
   [path: string]: Entry;
 };
 
-export type Entry = FileEntry | LinkEntry; //| DirEntry;
+export type Entry = JsonFileEntry | TsFileEntry | LinkEntry; //| DirEntry;
 
-export type FileEntry = { type: "FileEntry"; content: string };
+export type JsonFileEntry = { type: "JsonFileEntry"; json: object };
+export type TsFileEntry = { type: "TsFileEntry"; imports: ReadonlyArray<string> };
 // export type DirEntry = { type: "DirEntry" };
 export type LinkEntry = { type: "LinkEntry"; realPath: string };
 
@@ -15,7 +16,7 @@ export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
   return {
     cwd: () => cwd,
     fileExists: (path: string) => {
-      const result = mfs[path]?.type === "FileEntry";
+      const result = isFileEntry(mfs[path]);
       console.log("MOCK: fileExists", path, result);
       return result;
     },
@@ -32,8 +33,8 @@ export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
     readFile: (path: string) => {
       let result: string = undefined;
       const entry = mfs[path];
-      if (entry !== undefined && entry.type === "FileEntry") {
-        result = entry.content;
+      if (entry !== undefined && entry.type === "JsonFileEntry") {
+        result = JSON.stringify(entry.json);
       }
       console.log("MOCK: readFile", path, result);
       return result;
@@ -53,7 +54,7 @@ const isDirectory =
         }
         // result = isDirectory(mfs, cwd)(entry.realPath);
       }
-      if (entry.type === "FileEntry") {
+      if (isFileEntry(entry)) {
         const dir = dirname(entryPath);
         if (dir.startsWith(path)) {
           result = true;
@@ -63,3 +64,8 @@ const isDirectory =
     console.log("MOCK: isDirectory", path, result);
     return result;
   };
+
+function isFileEntry(entry: Entry | undefined): boolean {
+  if (entry === undefined) return false;
+  return entry.type === "JsonFileEntry" || entry.type === "TsFileEntry";
+}
