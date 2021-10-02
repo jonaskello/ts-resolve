@@ -36,8 +36,11 @@ export type ResolveReturn = {
  */
 export function tsResolve(
   specifier: string,
-  context: ResolveContext
+  context: ResolveContext,
+  tsConfigPathIn?: string | undefined
 ): ResolveReturn | undefined {
+  const entryTsConfig = tsConfigPathIn ?? process.env["TS_NODE_PROJECT"];
+
   console.log("RESOLVE: START");
 
   // parentURL is the URL returned by previous resolve, so it is not the specifier that did the import but the resolved specifier
@@ -55,9 +58,10 @@ export function tsResolve(
   }
 
   // Build tsconfig map if we don't have it
-  const entryTsConfig = process.env["TS_NODE_PROJECT"];
-  if (!entryTsConfig) {
-    throw new Error("TS_NODE_PROJECT must be defined for now...");
+  if (entryTsConfig === undefined || entryTsConfig === null) {
+    throw new Error(
+      "Entry tsconfig file must be passed or present in TS_NODE_PROJECT."
+    );
   }
   let tsConfigInfo = entryTsConfigInfoCache.get(entryTsConfig);
   if (tsConfigInfo === undefined) {

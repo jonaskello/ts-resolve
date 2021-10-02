@@ -40,7 +40,7 @@ const {
   ERR_PACKAGE_PATH_NOT_EXPORTED,
 } = require("./resolve-utils-support/node-errors").codes;
 
-const packageJsonReader = require("./resolve-utils-support/node-package-json-reader.js");
+const packageJsonReader = require("./resolve-utils-support/node-package-json-reader");
 const userConditions = getOptionValue("--conditions");
 const noAddons = getOptionValue("--no-addons");
 const addonConditions = noAddons ? [] : ["node-addons"];
