@@ -28,7 +28,15 @@ const mfs: MockFilesystem = {
     content: "import { appendMessage } from '@app/shared'",
   },
   // shared
-  "/root/packages/shared/package.json": { type: "FileEntry", content: "" },
+  "/root/packages/shared/package.json": {
+    type: "FileEntry",
+    content: JSON.stringify({
+      name: "@app/shared",
+      version: "1.0.0",
+      main: "lib/index.js",
+      type: "module",
+    }),
+  },
   "/root/packages/shared/tsconfig.json": {
     type: "FileEntry",
     content: JSON.stringify({
@@ -39,8 +47,8 @@ const mfs: MockFilesystem = {
     }),
   },
   // node_modules
-  "/root/node_modules/@app/server": { type: "LinkEntry", realPath: "packages/server" },
-  "/root/node_modules/@app/shared": { type: "LinkEntry", realPath: "packages/server" },
+  "/root/node_modules/@app/server": { type: "LinkEntry", realPath: "/root/packages/server" },
+  "/root/node_modules/@app/shared": { type: "LinkEntry", realPath: "/root/packages/shared" },
 };
 
 const fileSystem = createFilesystem(mfs, "/root");

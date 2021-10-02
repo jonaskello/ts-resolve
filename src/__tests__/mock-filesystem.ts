@@ -19,22 +19,15 @@ export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
       console.log("MOCK: fileExists", path, result);
       return result;
     },
-    isDirectory: (path: string) => {
-      let result = false;
-      for (let [entryPath, entry] of Object.entries(mfs)) {
-        if (entry.type === "FileEntry") {
-          const dir = dirname(entryPath);
-          if (dir.startsWith(path)) {
-            result = true;
-          }
-        }
-      }
-      console.log("MOCK: isDirectory", path, result);
-      return result;
-    },
+    isDirectory: isDirectory(mfs, cwd),
     getRealpath: (path: string) => {
-      console.log("MOCK: getRealpath", path);
-      return undefined;
+      const entry = mfs[path];
+      let result = path;
+      if (entry !== undefined && entry.type === "LinkEntry") {
+        result = entry.realPath;
+      }
+      console.log("MOCK: getRealpath", path, result);
+      return result;
     },
     readFile: (path: string) => {
       let result: string = undefined;
@@ -47,3 +40,26 @@ export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
     },
   };
 }
+
+const isDirectory =
+  (mfs: MockFilesystem, cwd: string) =>
+  (path: string): boolean => {
+    let result = false;
+    for (let [entryPath, entry] of Object.entries(mfs)) {
+      if (entry.type === "LinkEntry") {
+        // In reality, not all links are dirs, but for our purpose they can always be
+        if (entryPath.startsWith(path)) {
+          result = true;
+        }
+        // result = isDirectory(mfs, cwd)(entry.realPath);
+      }
+      if (entry.type === "FileEntry") {
+        const dir = dirname(entryPath);
+        if (dir.startsWith(path)) {
+          result = true;
+        }
+      }
+    }
+    console.log("MOCK: isDirectory", path, result);
+    return result;
+  };
