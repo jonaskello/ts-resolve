@@ -36,39 +36,6 @@ export interface TsConfigLoaderParams {
   loadSync?(cwd: string, filename?: string): TsConfigLoaderResult;
 }
 
-export function tsConfigLoader({
-  getEnv,
-  cwd,
-  loadSync = loadSyncDefault,
-}: TsConfigLoaderParams): TsConfigLoaderResult {
-  const TS_NODE_PROJECT = getEnv("TS_NODE_PROJECT");
-
-  // tsconfig.loadSync handles if TS_NODE_PROJECT is a file or directory
-  const loadResult = loadSync(cwd, TS_NODE_PROJECT);
-  return loadResult;
-}
-
-function loadSyncDefault(cwd: string, filename?: string): TsConfigLoaderResult {
-  // Tsconfig.loadSync uses path.resolve. This is why we can use an absolute path as filename
-
-  const configPath = resolveConfigPath(cwd, filename);
-
-  if (!configPath) {
-    return {
-      tsConfigPath: undefined,
-      baseUrl: undefined,
-      paths: undefined,
-    };
-  }
-  const config = loadTsconfig(configPath);
-
-  return {
-    tsConfigPath: configPath,
-    baseUrl: config && config.compilerOptions && config.compilerOptions.baseUrl,
-    paths: config && config.compilerOptions && config.compilerOptions.paths,
-  };
-}
-
 export function resolveConfigPath(cwd: string, filename?: string): string | undefined {
   if (filename) {
     const absolutePath = fs.lstatSync(filename).isDirectory()
