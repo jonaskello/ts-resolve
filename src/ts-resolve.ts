@@ -12,6 +12,7 @@ import {
   packageImportsResolve,
   packageExportsResolve,
 } from "./resolve_utils";
+import { createDefaultFilesystem, FileExists, FileSystem } from "./filesystem";
 
 type TsConfigInfo = {
   tsconfigMap: Map<string, Tsconfig>;
@@ -30,11 +31,6 @@ export type ResolveReturn = {
   readonly fileUrl: string;
 };
 
-export type FileSystem = {
-  readonly cwd: () => string;
-  readonly fileExists: (path: string) => boolean;
-};
-
 /**
  * Resolves to a typescript file, or returns undefined if
  * no typescript file was available.
@@ -43,7 +39,7 @@ export function tsResolve(
   specifier: string,
   context: ResolveContext,
   tsConfigPathIn?: string | undefined,
-  fileSystem?: FileSystem | undefined
+  fileSystemIn?: FileSystem | undefined
 ): ResolveReturn | undefined {
   // Let node handle `data:` and `node:` prefix etc.
   const excludeRegex = /^\w+:/;
@@ -53,6 +49,9 @@ export function tsResolve(
 
   // Fallback for entry tsconfig.json
   const entryTsConfig = tsConfigPathIn ?? process.env["TS_NODE_PROJECT"];
+
+  // Fallback to default filesystem
+  const fileSystem = fileSystemIn ?? createDefaultFilesystem();
 
   console.log("RESOLVE: START");
 
@@ -95,7 +94,8 @@ export function tsResolve(
     specifier,
     parentURL,
     conditionsSet,
-    tsConfigInfo
+    tsConfigInfo,
+    fileSystem
   );
   return resolved;
 }
@@ -110,7 +110,8 @@ function tsModuleResolve(
   specifier: string,
   base: string | undefined,
   conditions: Set<string>,
-  tsConfigInfo: TsConfigInfo
+  tsConfigInfo: TsConfigInfo,
+  fileSystem: FileSystem
 ): ResolveReturn | undefined {
   console.log("tsModuleResolve: START");
 
@@ -135,7 +136,10 @@ function tsModuleResolve(
     // }
     console.log("myModuleResolve: resolved", resolved.href);
 
-    const tsFileUrl = probeForTsFileInSamePathAsJsFile(resolved);
+    const tsFileUrl = probeForTsFileInSamePathAsJsFile(
+      resolved,
+      fileSystem.fileExists
+    );
     if (tsFileUrl !== undefined) {
       // This file belongs to the same TsConfig as it's ParentUrl, but we don't know
       // which TsConfig the ParentUrl belongs to....
@@ -185,7 +189,10 @@ function tsModuleResolve(
     if (possibleSourceLocation !== undefined) {
       const { fileUrl, tsConfigAbsPath } = possibleSourceLocation;
       //
-      const tsFile = probeForTsFileInSamePathAsJsFile(fileUrl);
+      const tsFile = probeForTsFileInSamePathAsJsFile(
+        fileUrl,
+        fileSystem.fileExists
+      );
       if (tsFile !== undefined) {
         console.log("---------> RESOLVED BARE SPECIFIER: ", tsFile.href);
         // finalizeResolution checks for old file endings if getOptionValue("--experimental-specifier-resolution") === "node"
@@ -277,7 +284,10 @@ function realPathOfSymlinkedUrl(inputUrl: URL): URL {
  * Given a file with a javascript extension, probe for a file with
  * typescript extension in the exact same path.
  */
-function probeForTsFileInSamePathAsJsFile(jsFileUrl: URL): URL | undefined {
+function probeForTsFileInSamePathAsJsFile(
+  jsFileUrl: URL,
+  fileExists: FileExists
+): URL | undefined {
   // The jsFile can be extensionless or have another extension
   // so we remove any extension and try with .ts and .tsx
   const jsFilePath = fileURLToPath(jsFileUrl);
@@ -453,17 +463,17 @@ function legacyMainResolve2(packageJSONUrl, packageConfig): ReadonlyArray<URL> {
 const tryStatSync = (path) =>
   fs.statSync(path, { throwIfNoEntry: false }) ?? new fs.Stats();
 
-/**
- * @param {string | URL} url
- * @returns {boolean}
- */
-function fileExists(url) {
-  try {
-    return fs.statSync(url, { throwIfNoEntry: false })?.isFile() ?? false;
-  } catch (e) {
-    return false;
-  }
-}
+// /**
+//  * @param {string | URL} url
+//  * @returns {boolean}
+//  */
+// function fileExists(url) {
+//   try {
+//     return fs.statSync(url, { throwIfNoEntry: false })?.isFile() ?? false;
+//   } catch (e) {
+//     return false;
+//   }
+// }
 
 function isTypescriptFile(url) {
   const extensionsRegex = /\.ts$/;
