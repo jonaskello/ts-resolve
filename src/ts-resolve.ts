@@ -37,8 +37,16 @@ export type ResolveReturn = {
 export function tsResolve(
   specifier: string,
   context: ResolveContext,
-  tsConfigPathIn?: string | undefined
+  tsConfigPathIn?: string | undefined,
+  cwd?: string | undefined
 ): ResolveReturn | undefined {
+  // Let node handle `data:` and `node:` prefix etc.
+  const excludeRegex = /^\w+:/;
+  if (excludeRegex.test(specifier)) {
+    return undefined;
+  }
+
+  // Fallback for entry tsconfig.json
   const entryTsConfig = tsConfigPathIn ?? process.env["TS_NODE_PROJECT"];
 
   console.log("RESOLVE: START");
@@ -48,14 +56,11 @@ export function tsResolve(
   // import xxxx from "./foo.js"
   // Then ./foo.ts file will be the parentURL, not foo.js
   // This means abs/relative imports never need mapping of path from output to input
-  let { parentURL, conditions } = context;
-  console.log("RESOLVE: parentURL", parentURL);
+  let { parentURL: parentURLIn, conditions } = context;
 
-  // Let node handle `data:` and `node:` prefix etc.
-  const excludeRegex = /^\w+:/;
-  if (excludeRegex.test(specifier)) {
-    return undefined;
-  }
+  // If parentURL was not specified, then we use cwd
+  const parentURL = parentURLIn ?? cwd ?? process.cwd();
+  console.log("RESOLVE: parentURL", parentURL);
 
   // Build tsconfig map if we don't have it
   if (entryTsConfig === undefined || entryTsConfig === null) {
@@ -69,12 +74,14 @@ export function tsResolve(
     entryTsConfigInfoCache.set(entryTsConfig, tsConfigInfo);
   }
 
-  // If file ends in .ts then just return it
+  // If file explicitly ends in .ts then just return it
   // This can only happen for the entry file as typescript does not allow
   // import of .ts files
   if (isTypescriptFile(specifier)) {
-    const url = new URL(specifier, parentURL).href;
-    return { fileUrl: url, tsConfigUrl: "EntryPoint" };
+    console.log("specifier, parentURL", specifier, parentURL);
+    const absFilePath = path.join(parentURL, specifier);
+    const url = pathToFileURL(absFilePath);
+    return { fileUrl: url.href, tsConfigUrl: "EntryPoint" };
   }
 
   // Try to resolve to a typescript file, returns undefined if it could not be resolved
