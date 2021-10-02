@@ -1,3 +1,6 @@
-test("adds 1 + 2 to equal 3", () => {
-  expect(1 + 2).toBe(3);
+import { tsResolve } from "../ts-resolve";
+
+test("Simple resolve", () => {
+  const resolved = tsResolve("hello", { conditions: [], parentURL: "" });
+  expect(resolved.fileUrl).toBe("file://hello");
 });
