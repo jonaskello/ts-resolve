@@ -3,7 +3,6 @@ import * as fs from "fs";
 // tslint:disable:no-require-imports
 import JSON5 = require("json5");
 import StripBom = require("strip-bom");
-import { IsDirectory } from "./filesystem";
 // tslint:enable:no-require-imports
 
 /**
@@ -22,54 +21,6 @@ export interface Tsconfig {
     paths?: { [key: string]: Array<string> };
     strict?: boolean;
   };
-}
-
-export interface TsConfigLoaderResult {
-  tsConfigPath: string | undefined;
-  baseUrl: string | undefined;
-  paths: { [key: string]: Array<string> } | undefined;
-}
-
-export interface TsConfigLoaderParams {
-  getEnv: (key: string) => string | undefined;
-  cwd: string;
-  loadSync?(cwd: string, filename?: string): TsConfigLoaderResult;
-}
-
-export function resolveConfigPath(cwd: string, filename?: string): string | undefined {
-  if (filename) {
-    const absolutePath = fs.lstatSync(filename).isDirectory()
-      ? path.resolve(filename, "./tsconfig.json")
-      : path.resolve(cwd, filename);
-
-    return absolutePath;
-  }
-
-  if (fs.statSync(cwd).isFile()) {
-    return path.resolve(cwd);
-  }
-
-  const configAbsolutePath = walkForTsConfig(cwd);
-  return configAbsolutePath ? path.resolve(configAbsolutePath) : undefined;
-}
-
-export function walkForTsConfig(
-  directory: string,
-  existsSync: (path: string) => boolean = fs.existsSync
-): string | undefined {
-  const configPath = path.join(directory, "./tsconfig.json");
-  if (existsSync(configPath)) {
-    return configPath;
-  }
-
-  const parentDirectory = path.join(directory, "../");
-
-  // If we reached the top
-  if (directory === parentDirectory) {
-    return undefined;
-  }
-
-  return walkForTsConfig(parentDirectory, existsSync);
 }
 
 export function loadTsconfig(
