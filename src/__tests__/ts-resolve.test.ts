@@ -3,7 +3,15 @@ import { MockFilesystem, createFilesystem } from "./mock-filesystem";
 
 const mfs: MockFilesystem = {
   // server
-  "/root/packages/server/package.json": { type: "FileEntry", content: "" },
+  "/root/packages/server/package.json": {
+    type: "FileEntry",
+    content: JSON.stringify({
+      name: "@app/server",
+      version: "1.0.0",
+      main: "index.js",
+      type: "module",
+    }),
+  },
   "/root/packages/server/tsconfig.json": {
     type: "FileEntry",
     content: JSON.stringify({
@@ -54,6 +62,16 @@ test("Relative resolve", () => {
   const resolved = tsResolve(
     "./start-server.js",
     { conditions: [], parentURL: "file:///root/packages/server/src/server.ts" },
+    entryTsConfig,
+    fileSystem
+  );
+  expect(resolved.fileUrl).toBe("file:///root/packages/server/src/start-server.ts");
+});
+
+test.only("Bare specifier, link to package referenced in tsconfig", () => {
+  const resolved = tsResolve(
+    "@app/shared",
+    { conditions: [], parentURL: "file:///root/packages/server/src/start-server.ts" },
     entryTsConfig,
     fileSystem
   );

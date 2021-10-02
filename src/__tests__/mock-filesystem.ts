@@ -37,12 +37,13 @@ export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
       return undefined;
     },
     readFile: (path: string) => {
-      console.log("MOCK: readFile", path);
+      let result: string = undefined;
       const entry = mfs[path];
-      if (entry.type === "FileEntry") {
-        return entry.content;
+      if (entry !== undefined && entry.type === "FileEntry") {
+        result = entry.content;
       }
-      return undefined;
+      console.log("MOCK: readFile", path, result);
+      return result;
     },
   };
 }

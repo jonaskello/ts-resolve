@@ -115,7 +115,7 @@ function tsModuleResolve(
   base: string | undefined,
   conditions: Set<string>,
   tsConfigInfo: TsConfigInfo,
-  fileSystem: FileSystem
+  filesystem: FileSystem
 ): ResolveReturn | undefined {
   console.log("tsModuleResolve: START");
 
@@ -140,7 +140,7 @@ function tsModuleResolve(
     // }
     console.log("myModuleResolve: resolved", resolved.href);
 
-    const tsFileUrl = probeForTsFileInSamePathAsJsFile(resolved, fileSystem.fileExists);
+    const tsFileUrl = probeForTsFileInSamePathAsJsFile(resolved, filesystem.fileExists);
     if (tsFileUrl !== undefined) {
       // This file belongs to the same TsConfig as it's ParentUrl, but we don't know
       // which TsConfig the ParentUrl belongs to....
@@ -154,7 +154,7 @@ function tsModuleResolve(
   let possibleUrls: ReadonlyArray<URL>;
   if (specifier[0] === "#") {
     console.log("myModuleResolve: packageImportsResolve");
-    const { resolved } = packageImportsResolve(packageResolve, specifier, base, conditions)!;
+    const { resolved } = packageImportsResolve(packageResolve, specifier, base, conditions, filesystem.readFile)!;
     possibleUrls = [resolved];
   } else {
     console.log("myModuleResolve: else");
@@ -162,7 +162,7 @@ function tsModuleResolve(
       possibleUrls = [new URL(specifier)];
     } catch {
       console.log("myModuleResolve: packageResolve");
-      possibleUrls = packageResolve(specifier, base, conditions, fileSystem.isDirectory);
+      possibleUrls = packageResolve(specifier, base, conditions, filesystem.isDirectory, filesystem.readFile);
       console.log("myModuleResolve: packageResolve RETURN", Array.isArray(possibleUrls));
     }
   }
@@ -174,12 +174,12 @@ function tsModuleResolve(
   for (const possibleUrl of possibleUrls) {
     // Convert path (useful if the specifier was a reference to a package which is in the same composite project)
     // If the resolution resulted in a symlink then use the real path instead
-    const realPossibleUrl = realPathOfSymlinkedUrl(possibleUrl, fileSystem.getRealpath);
+    const realPossibleUrl = realPathOfSymlinkedUrl(possibleUrl, filesystem.getRealpath);
     const possibleSourceLocation = convertTypescriptOutUrlToSourceLocation(tsConfigInfo, realPossibleUrl);
     if (possibleSourceLocation !== undefined) {
       const { fileUrl, tsConfigAbsPath } = possibleSourceLocation;
       //
-      const tsFile = probeForTsFileInSamePathAsJsFile(fileUrl, fileSystem.fileExists);
+      const tsFile = probeForTsFileInSamePathAsJsFile(fileUrl, filesystem.fileExists);
       if (tsFile !== undefined) {
         console.log("---------> RESOLVED BARE SPECIFIER: ", tsFile.href);
         // finalizeResolution checks for old file endings if getOptionValue("--experimental-specifier-resolution") === "node"
@@ -294,14 +294,15 @@ function packageResolve(
   specifier: string,
   base: string | URL | undefined,
   conditions: Set<string>,
-  isDirectory: IsDirectory
+  isDirectory: IsDirectory,
+  readFile: ReadFile
 ): ReadonlyArray<URL> {
   // Parse the specifier as a package name (package or @org/package) and separate out the sub-path
   const { packageName, packageSubpath, isScoped } = parsePackageName(specifier, base);
 
   // ResolveSelf
   // Check if the specifier resolves to the same package we are resolving from
-  const selfResolved = resolveSelf(base, packageName, packageSubpath, conditions);
+  const selfResolved = resolveSelf(base, packageName, packageSubpath, conditions, readFile);
   if (selfResolved) return [selfResolved];
 
   // Find package.json by ascending the file system
@@ -310,7 +311,7 @@ function packageResolve(
   // If package.json was found, resolve from it's exports or main field
   if (packageJsonMatch) {
     const [packageJSONUrl, packageJSONPath] = packageJsonMatch;
-    const packageConfig = getPackageConfig(packageJSONPath, specifier, base);
+    const packageConfig = getPackageConfig(readFile, packageJSONPath, specifier, base);
     if (packageConfig.exports !== undefined && packageConfig.exports !== null) {
       const per = packageExportsResolve(
         packageResolve,
@@ -365,8 +366,8 @@ function findPackageJson(packageName: string, base: string | URL, isScoped: bool
 
 // This could probably be moved to a built-in API
 // However it needs packageResolve since it calls into packageExportsResolve()
-function resolveSelf(base, packageName, packageSubpath, conditions) {
-  const packageConfig = getPackageScopeConfig(base);
+function resolveSelf(base, packageName, packageSubpath, conditions, readFile: ReadFile) {
+  const packageConfig = getPackageScopeConfig(base, readFile);
   if (packageConfig.exists) {
     const packageJSONUrl = pathToFileURL(packageConfig.pjsonPath);
     if (packageConfig.name === packageName && packageConfig.exports !== undefined && packageConfig.exports !== null) {

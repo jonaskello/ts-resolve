@@ -16,14 +16,12 @@ let manifest;
  * @param {string} jsonPath
  * @return {[string, boolean]}
  */
-function read(jsonPath) {
+function read(jsonPath, readFile) {
   if (cache.has(jsonPath)) {
     return cache.get(jsonPath);
   }
 
-  const [string, containsKeys] = internalModuleReadJSON(
-    toNamespacedPath(jsonPath)
-  );
+  const [string, containsKeys] = internalModuleReadJSON(toNamespacedPath(jsonPath), readFile);
   const result = { string, containsKeys };
   const { getOptionValue } = require("./node-options");
   if (string !== undefined) {
