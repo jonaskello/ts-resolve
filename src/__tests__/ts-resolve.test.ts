@@ -63,7 +63,7 @@ test("Resolve entry file", () => {
     entryTsConfig,
     fileSystem
   );
-  expect(resolved.fileUrl).toBe("file:///root/packages/server/src/server.ts");
+  expect(resolved?.fileUrl).toBe("file:///root/packages/server/src/server.ts");
 });
 
 test("Relative resolve", () => {
@@ -73,7 +73,7 @@ test("Relative resolve", () => {
     entryTsConfig,
     fileSystem
   );
-  expect(resolved.fileUrl).toBe("file:///root/packages/server/src/start-server.ts");
+  expect(resolved?.fileUrl).toBe("file:///root/packages/server/src/start-server.ts");
 });
 
 test.only("Bare specifier, link to package referenced in tsconfig", () => {
@@ -83,5 +83,5 @@ test.only("Bare specifier, link to package referenced in tsconfig", () => {
     entryTsConfig,
     fileSystem
   );
-  expect(resolved.fileUrl).toBe("file:///root/packages/server/src/start-server.ts");
+  expect(resolved?.fileUrl).toBe("file:///root/packages/server/src/start-server.ts");
 });
