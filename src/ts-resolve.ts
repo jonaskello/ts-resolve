@@ -11,13 +11,7 @@ import {
   packageImportsResolve,
   packageExportsResolve,
 } from "./resolve_utils";
-import {
-  createDefaultFilesystem,
-  FileExists,
-  FileSystem,
-  GetRealpath,
-  IsDirectory,
-} from "./filesystem";
+import { createDefaultFilesystem, FileExists, FileSystem, GetRealpath, IsDirectory } from "./filesystem";
 
 type TsConfigInfo = {
   tsconfigMap: Map<string, Tsconfig>;
@@ -73,13 +67,11 @@ export function tsResolve(
 
   // Build tsconfig map if we don't have it
   if (entryTsConfig === undefined || entryTsConfig === null) {
-    throw new Error(
-      "Entry tsconfig file must be passed or present in TS_NODE_PROJECT."
-    );
+    throw new Error("Entry tsconfig file must be passed or present in TS_NODE_PROJECT.");
   }
   let tsConfigInfo = entryTsConfigInfoCache.get(entryTsConfig);
   if (tsConfigInfo === undefined) {
-    tsConfigInfo = buildTsConfigInfo(entryTsConfig);
+    tsConfigInfo = buildTsConfigInfo(entryTsConfig, fileSystem.cwd());
     entryTsConfigInfoCache.set(entryTsConfig, tsConfigInfo);
   }
 
@@ -95,13 +87,7 @@ export function tsResolve(
 
   // Try to resolve to a typescript file, returns undefined if it could not be resolved
   const conditionsSet = getConditionsSet(conditions);
-  const resolved = tsModuleResolve(
-    specifier,
-    parentURL,
-    conditionsSet,
-    tsConfigInfo,
-    fileSystem
-  );
+  const resolved = tsModuleResolve(specifier, parentURL, conditionsSet, tsConfigInfo, fileSystem);
   return resolved;
 }
 
@@ -141,10 +127,7 @@ function tsModuleResolve(
     // }
     console.log("myModuleResolve: resolved", resolved.href);
 
-    const tsFileUrl = probeForTsFileInSamePathAsJsFile(
-      resolved,
-      fileSystem.fileExists
-    );
+    const tsFileUrl = probeForTsFileInSamePathAsJsFile(resolved, fileSystem.fileExists);
     if (tsFileUrl !== undefined) {
       // This file belongs to the same TsConfig as it's ParentUrl, but we don't know
       // which TsConfig the ParentUrl belongs to....
@@ -158,12 +141,7 @@ function tsModuleResolve(
   let possibleUrls: ReadonlyArray<URL>;
   if (specifier[0] === "#") {
     console.log("myModuleResolve: packageImportsResolve");
-    const { resolved } = packageImportsResolve(
-      packageResolve,
-      specifier,
-      base,
-      conditions
-    )!;
+    const { resolved } = packageImportsResolve(packageResolve, specifier, base, conditions)!;
     possibleUrls = [resolved];
   } else {
     console.log("myModuleResolve: else");
@@ -171,16 +149,8 @@ function tsModuleResolve(
       possibleUrls = [new URL(specifier)];
     } catch {
       console.log("myModuleResolve: packageResolve");
-      possibleUrls = packageResolve(
-        specifier,
-        base,
-        conditions,
-        fileSystem.isDirectory
-      );
-      console.log(
-        "myModuleResolve: packageResolve RETURN",
-        Array.isArray(possibleUrls)
-      );
+      possibleUrls = packageResolve(specifier, base, conditions, fileSystem.isDirectory);
+      console.log("myModuleResolve: packageResolve RETURN", Array.isArray(possibleUrls));
     }
   }
   console.log("myModuleResolve: END");
@@ -191,21 +161,12 @@ function tsModuleResolve(
   for (const possibleUrl of possibleUrls) {
     // Convert path (useful if the specifier was a reference to a package which is in the same composite project)
     // If the resolution resulted in a symlink then use the real path instead
-    const realPossibleUrl = realPathOfSymlinkedUrl(
-      possibleUrl,
-      fileSystem.getRealpath
-    );
-    const possibleSourceLocation = convertTypescriptOutUrlToSourceLocation(
-      tsConfigInfo,
-      realPossibleUrl
-    );
+    const realPossibleUrl = realPathOfSymlinkedUrl(possibleUrl, fileSystem.getRealpath);
+    const possibleSourceLocation = convertTypescriptOutUrlToSourceLocation(tsConfigInfo, realPossibleUrl);
     if (possibleSourceLocation !== undefined) {
       const { fileUrl, tsConfigAbsPath } = possibleSourceLocation;
       //
-      const tsFile = probeForTsFileInSamePathAsJsFile(
-        fileUrl,
-        fileSystem.fileExists
-      );
+      const tsFile = probeForTsFileInSamePathAsJsFile(fileUrl, fileSystem.fileExists);
       if (tsFile !== undefined) {
         console.log("---------> RESOLVED BARE SPECIFIER: ", tsFile.href);
         // finalizeResolution checks for old file endings if getOptionValue("--experimental-specifier-resolution") === "node"
@@ -239,19 +200,12 @@ function convertTypescriptOutUrlToSourceLocation(
       absOutDir = key;
       tsConfigAbsPath = value;
       const tc = tsConfigInfo.tsconfigMap.get(tsConfigAbsPath);
-      absRootDir = path.join(
-        path.dirname(tsConfigAbsPath),
-        tc?.compilerOptions?.rootDir ?? ""
-      );
+      absRootDir = path.join(path.dirname(tsConfigAbsPath), tc?.compilerOptions?.rootDir ?? "");
       console.log("-----> checking for root dir", absRootDir);
       break;
     }
   }
-  if (
-    absOutDir === undefined ||
-    tsConfigAbsPath === undefined ||
-    absRootDir === undefined
-  ) {
+  if (absOutDir === undefined || tsConfigAbsPath === undefined || absRootDir === undefined) {
     return undefined;
   }
 
@@ -302,10 +256,7 @@ function realPathOfSymlinkedUrl(inputUrl: URL, getRealPath: GetRealpath): URL {
  * Given a file with a javascript extension, probe for a file with
  * typescript extension in the exact same path.
  */
-function probeForTsFileInSamePathAsJsFile(
-  jsFileUrl: URL,
-  fileExists: FileExists
-): URL | undefined {
+function probeForTsFileInSamePathAsJsFile(jsFileUrl: URL, fileExists: FileExists): URL | undefined {
   // The jsFile can be extensionless or have another extension
   // so we remove any extension and try with .ts and .tsx
   const jsFilePath = fileURLToPath(jsFileUrl);
@@ -333,28 +284,15 @@ function packageResolve(
   isDirectory: IsDirectory
 ): ReadonlyArray<URL> {
   // Parse the specifier as a package name (package or @org/package) and separate out the sub-path
-  const { packageName, packageSubpath, isScoped } = parsePackageName(
-    specifier,
-    base
-  );
+  const { packageName, packageSubpath, isScoped } = parsePackageName(specifier, base);
 
   // ResolveSelf
   // Check if the specifier resolves to the same package we are resolving from
-  const selfResolved = resolveSelf(
-    base,
-    packageName,
-    packageSubpath,
-    conditions
-  );
+  const selfResolved = resolveSelf(base, packageName, packageSubpath, conditions);
   if (selfResolved) return [selfResolved];
 
   // Find package.json by ascending the file system
-  const packageJsonMatch = findPackageJson(
-    packageName,
-    base,
-    isScoped,
-    isDirectory
-  );
+  const packageJsonMatch = findPackageJson(packageName, base, isScoped, isDirectory);
 
   // If package.json was found, resolve from it's exports or main field
   if (packageJsonMatch) {
@@ -384,16 +322,8 @@ function packageResolve(
 }
 
 // This could probably be moved to a built-in API
-function findPackageJson(
-  packageName: string,
-  base: string | URL,
-  isScoped: boolean,
-  isDirectory: IsDirectory
-) {
-  let packageJSONUrl = new URL(
-    "./node_modules/" + packageName + "/package.json",
-    base
-  );
+function findPackageJson(packageName: string, base: string | URL, isScoped: boolean, isDirectory: IsDirectory) {
+  let packageJSONUrl = new URL("./node_modules/" + packageName + "/package.json", base);
   let packageJSONPath = fileURLToPath(packageJSONUrl);
   let lastPath;
   do {
@@ -401,16 +331,12 @@ function findPackageJson(
     //   // StringPrototypeSlice(packageJSONPath, 0, packageJSONPath.length - 13)
     //   packageJSONPath.slice(0, packageJSONPath.length - 13)
     // );
-    const isDir = isDirectory(
-      packageJSONPath.slice(0, packageJSONPath.length - 13)
-    );
+    const isDir = isDirectory(packageJSONPath.slice(0, packageJSONPath.length - 13));
     // if (!stat.isDirectory()) {
     if (!isDir) {
       lastPath = packageJSONPath;
       packageJSONUrl = new URL(
-        (isScoped ? "../../../../node_modules/" : "../../../node_modules/") +
-          packageName +
-          "/package.json",
+        (isScoped ? "../../../../node_modules/" : "../../../node_modules/") + packageName + "/package.json",
         packageJSONUrl
       );
       packageJSONPath = fileURLToPath(packageJSONUrl);
@@ -430,19 +356,9 @@ function resolveSelf(base, packageName, packageSubpath, conditions) {
   const packageConfig = getPackageScopeConfig(base);
   if (packageConfig.exists) {
     const packageJSONUrl = pathToFileURL(packageConfig.pjsonPath);
-    if (
-      packageConfig.name === packageName &&
-      packageConfig.exports !== undefined &&
-      packageConfig.exports !== null
-    ) {
-      return packageExportsResolve(
-        packageResolve,
-        packageJSONUrl,
-        packageSubpath,
-        packageConfig,
-        base,
-        conditions
-      ).resolved;
+    if (packageConfig.name === packageName && packageConfig.exports !== undefined && packageConfig.exports !== null) {
+      return packageExportsResolve(packageResolve, packageJSONUrl, packageSubpath, packageConfig, base, conditions)
+        .resolved;
     }
   }
   return undefined;
@@ -512,17 +428,14 @@ function isTypescriptFile(url) {
   return extensionsRegex.test(url);
 }
 
-function buildTsConfigInfo(entryTsConfig: string): TsConfigInfo {
-  const tsconfigMap = loadTsConfigAndResolveReferences(entryTsConfig);
+function buildTsConfigInfo(entryTsConfig: string, cwd: string): TsConfigInfo {
+  const tsconfigMap = loadTsConfigAndResolveReferences(entryTsConfig, cwd);
   const absOutDirToTsConfig = new Map();
   for (const [k, v] of tsconfigMap.entries()) {
     if (v.compilerOptions?.outDir === undefined) {
       throw new Error("Outdir must be defined for now...");
     }
-    const absoluteOutDir = path.resolve(
-      path.dirname(k),
-      v.compilerOptions.outDir
-    );
+    const absoluteOutDir = path.resolve(path.dirname(k), v.compilerOptions.outDir);
     absOutDirToTsConfig.set(absoluteOutDir, k);
   }
   return {

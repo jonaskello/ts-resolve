@@ -68,10 +68,7 @@ function loadSyncDefault(cwd: string, filename?: string): TsConfigLoaderResult {
   };
 }
 
-export function resolveConfigPath(
-  cwd: string,
-  filename?: string
-): string | undefined {
+export function resolveConfigPath(cwd: string, filename?: string): string | undefined {
   if (filename) {
     const absolutePath = fs.lstatSync(filename).isDirectory()
       ? path.resolve(filename, "./tsconfig.json")
@@ -110,8 +107,7 @@ export function walkForTsConfig(
 export function loadTsconfig(
   configFilePath: string,
   existsSync: (path: string) => boolean = fs.existsSync,
-  readFileSync: (filename: string) => string = (filename: string) =>
-    fs.readFileSync(filename, "utf8")
+  readFileSync: (filename: string) => string = (filename: string) => fs.readFileSync(filename, "utf8")
 ): Tsconfig | undefined {
   if (!existsSync(configFilePath)) {
     return undefined;
@@ -123,37 +119,22 @@ export function loadTsconfig(
   let extendedConfig = config.extends;
 
   if (extendedConfig) {
-    if (
-      typeof extendedConfig === "string" &&
-      extendedConfig.indexOf(".json") === -1
-    ) {
+    if (typeof extendedConfig === "string" && extendedConfig.indexOf(".json") === -1) {
       extendedConfig += ".json";
     }
     const currentDir = path.dirname(configFilePath);
     let extendedConfigPath = path.join(currentDir, extendedConfig);
-    if (
-      extendedConfig.indexOf("/") !== -1 &&
-      extendedConfig.indexOf(".") !== -1 &&
-      !existsSync(extendedConfigPath)
-    ) {
-      extendedConfigPath = path.join(
-        currentDir,
-        "node_modules",
-        extendedConfig
-      );
+    if (extendedConfig.indexOf("/") !== -1 && extendedConfig.indexOf(".") !== -1 && !existsSync(extendedConfigPath)) {
+      extendedConfigPath = path.join(currentDir, "node_modules", extendedConfig);
     }
 
-    const base =
-      loadTsconfig(extendedConfigPath, existsSync, readFileSync) || {};
+    const base = loadTsconfig(extendedConfigPath, existsSync, readFileSync) || {};
 
     // baseUrl should be interpreted as relative to the base tsconfig,
     // but we need to update it so it is relative to the original tsconfig being loaded
     if (base.compilerOptions && base.compilerOptions.baseUrl) {
       const extendsDir = path.dirname(extendedConfig);
-      base.compilerOptions.baseUrl = path.join(
-        extendsDir,
-        base.compilerOptions.baseUrl
-      );
+      base.compilerOptions.baseUrl = path.join(extendsDir, base.compilerOptions.baseUrl);
     }
 
     return {
@@ -168,16 +149,9 @@ export function loadTsconfig(
   return config;
 }
 
-export function loadTsConfigAndResolveReferences(
-  entryTsConfig: string
-): Map<string, Tsconfig> {
-  let cwd = process.cwd();
+export function loadTsConfigAndResolveReferences(entryTsConfig: string, cwd: string): Map<string, Tsconfig> {
   const tsconfigMap = new Map();
-  loadTsConfigAndResolveReferencesRecursive(
-    cwd,
-    [{ path: entryTsConfig }],
-    tsconfigMap
-  );
+  loadTsConfigAndResolveReferencesRecursive(cwd, [{ path: entryTsConfig }], tsconfigMap);
   return tsconfigMap;
 }
 
@@ -197,11 +171,7 @@ function loadTsConfigAndResolveReferencesRecursive(
       throw new Error("Could not find tsconfig ref.");
     }
     tsconfigMap.set(fullPath, tsconfig);
-    loadTsConfigAndResolveReferencesRecursive(
-      path.dirname(fullPath),
-      tsconfig?.references ?? [],
-      tsconfigMap
-    );
+    loadTsConfigAndResolveReferencesRecursive(path.dirname(fullPath), tsconfig?.references ?? [], tsconfigMap);
   }
   return tsconfigMap;
 }
