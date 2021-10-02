@@ -1,6 +1,6 @@
 import { URL, pathToFileURL, fileURLToPath } from "url";
 import path from "path";
-import { loadTsConfigAndResolveReferences, Tsconfig } from "./tsconfig-loader";
+import { loadTsconfig, Tsconfig } from "./tsconfig-loader";
 
 import {
   getPackageConfig, // getPackageConfig does filesystem access
@@ -11,7 +11,8 @@ import {
   packageImportsResolve,
   packageExportsResolve,
 } from "./resolve_utils";
-import { createDefaultFilesystem, FileExists, FileSystem, GetRealpath, IsDirectory } from "./filesystem";
+import { createDefaultFilesystem, FileExists, FileSystem, GetRealpath, IsDirectory, ReadFile } from "./filesystem";
+import { readFileSync } from "fs";
 
 type TsConfigInfo = {
   tsconfigMap: Map<string, Tsconfig>;
@@ -50,7 +51,7 @@ export function tsResolve(
   const entryTsConfig = tsConfigPathIn ?? process.env["TS_NODE_PROJECT"];
 
   // Fallback to default filesystem
-  const fileSystem = fileSystemIn ?? createDefaultFilesystem();
+  const fileystem = fileSystemIn ?? createDefaultFilesystem();
 
   console.log("RESOLVE: START");
 
@@ -62,16 +63,22 @@ export function tsResolve(
   let { parentURL: parentURLIn, conditions } = context;
 
   // If parentURL was not specified, then we use cwd
-  const parentURL = parentURLIn ?? fileSystem?.cwd() ?? process.cwd();
+  const parentURL = parentURLIn ?? fileystem?.cwd() ?? process.cwd();
   console.log("RESOLVE: parentURL", parentURL);
 
   // Build tsconfig map if we don't have it
-  if (entryTsConfig === undefined || entryTsConfig === null) {
+  if (entryTsConfig === undefined || entryTsConfig === null || entryTsConfig === "") {
     throw new Error("Entry tsconfig file must be passed or present in TS_NODE_PROJECT.");
   }
   let tsConfigInfo = entryTsConfigInfoCache.get(entryTsConfig);
   if (tsConfigInfo === undefined) {
-    tsConfigInfo = buildTsConfigInfo(entryTsConfig, fileSystem.cwd());
+    tsConfigInfo = buildTsConfigInfo(
+      entryTsConfig,
+      fileystem.cwd(),
+      fileystem.isDirectory,
+      fileystem.fileExists,
+      fileystem.readFile
+    );
     entryTsConfigInfoCache.set(entryTsConfig, tsConfigInfo);
   }
 
@@ -87,7 +94,7 @@ export function tsResolve(
 
   // Try to resolve to a typescript file, returns undefined if it could not be resolved
   const conditionsSet = getConditionsSet(conditions);
-  const resolved = tsModuleResolve(specifier, parentURL, conditionsSet, tsConfigInfo, fileSystem);
+  const resolved = tsModuleResolve(specifier, parentURL, conditionsSet, tsConfigInfo, fileystem);
   return resolved;
 }
 
@@ -428,8 +435,14 @@ function isTypescriptFile(url) {
   return extensionsRegex.test(url);
 }
 
-function buildTsConfigInfo(entryTsConfig: string, cwd: string): TsConfigInfo {
-  const tsconfigMap = loadTsConfigAndResolveReferences(entryTsConfig, cwd);
+function buildTsConfigInfo(
+  entryTsConfig: string,
+  cwd: string,
+  isDirectory: IsDirectory,
+  fileExists: FileExists,
+  readFile: ReadFile
+): TsConfigInfo {
+  const tsconfigMap = loadTsConfigAndResolveReferences(entryTsConfig, cwd, isDirectory, fileExists, readFile);
   const absOutDirToTsConfig = new Map();
   for (const [k, v] of tsconfigMap.entries()) {
     if (v.compilerOptions?.outDir === undefined) {
@@ -442,4 +455,55 @@ function buildTsConfigInfo(entryTsConfig: string, cwd: string): TsConfigInfo {
     tsconfigMap,
     absOutDirToTsConfig,
   };
+}
+
+export function loadTsConfigAndResolveReferences(
+  entryTsConfig: string,
+  cwd: string,
+  isDirectory: IsDirectory,
+  fileExists: FileExists,
+  readFile: ReadFile
+): Map<string, Tsconfig> {
+  const tsconfigMap = new Map();
+  console.log(`entryTsConfig = '${entryTsConfig}'`);
+  loadTsConfigAndResolveReferencesRecursive(
+    cwd,
+    [{ path: entryTsConfig }],
+    tsconfigMap,
+    isDirectory,
+    fileExists,
+    readFile
+  );
+  return tsconfigMap;
+}
+
+function loadTsConfigAndResolveReferencesRecursive(
+  cwd: string,
+  refs: Array<{ path: string }>,
+  tsconfigMap: Map<string, Tsconfig>,
+  isDirectory: IsDirectory,
+  fileExists: FileExists,
+  readFile: ReadFile
+): Map<string, Tsconfig> {
+  for (const ref of refs) {
+    console.log("resolveConfigPath", cwd, ref.path);
+    let fullPath = path.join(cwd, ref.path);
+    if (isDirectory(fullPath)) {
+      fullPath = path.join(fullPath, "tsconfig.json");
+    }
+    const tsconfig = loadTsconfig(fullPath, fileExists, readFile);
+    if (!tsconfig) {
+      throw new Error(`Could not find tsconfig in path '${fullPath}'.`);
+    }
+    tsconfigMap.set(fullPath, tsconfig);
+    loadTsConfigAndResolveReferencesRecursive(
+      path.dirname(fullPath),
+      tsconfig?.references ?? [],
+      tsconfigMap,
+      isDirectory,
+      fileExists,
+      readFile
+    );
+  }
+  return tsconfigMap;
 }

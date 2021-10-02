@@ -5,11 +5,13 @@ export type FileSystem = {
   readonly fileExists: FileExists;
   readonly isDirectory: IsDirectory;
   readonly getRealpath: GetRealpath;
+  readonly readFile: ReadFile;
 };
 
 export type FileExists = (path: string) => boolean;
 export type IsDirectory = (path: string) => boolean;
 export type GetRealpath = (path: string) => string | undefined;
+export type ReadFile = (filename: string) => string | undefined;
 
 export function createDefaultFilesystem(): FileSystem {
   return {
@@ -21,8 +23,7 @@ export function createDefaultFilesystem(): FileSystem {
         return false;
       }
     },
-    isDirectory: (path: string) =>
-      fs.statSync(path, { throwIfNoEntry: false })?.isDirectory() ?? false,
+    isDirectory: (path: string) => fs.statSync(path, { throwIfNoEntry: false })?.isDirectory() ?? false,
     getRealpath: (path: string) => {
       try {
         return fs.realpathSync(path);
@@ -30,5 +31,6 @@ export function createDefaultFilesystem(): FileSystem {
         return undefined;
       }
     },
+    readFile: (path: string) => fs.readFileSync(path, "utf8"),
   };
 }
