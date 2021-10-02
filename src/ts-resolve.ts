@@ -12,7 +12,12 @@ import {
   packageImportsResolve,
   packageExportsResolve,
 } from "./resolve_utils";
-import { createDefaultFilesystem, FileExists, FileSystem } from "./filesystem";
+import {
+  createDefaultFilesystem,
+  FileExists,
+  FileSystem,
+  IsDirectory,
+} from "./filesystem";
 
 type TsConfigInfo = {
   tsconfigMap: Map<string, Tsconfig>;
@@ -166,7 +171,12 @@ function tsModuleResolve(
       possibleUrls = [new URL(specifier)];
     } catch {
       console.log("myModuleResolve: packageResolve");
-      possibleUrls = packageResolve(specifier, base, conditions);
+      possibleUrls = packageResolve(
+        specifier,
+        base,
+        conditions,
+        fileSystem.isDirectory
+      );
       console.log(
         "myModuleResolve: packageResolve RETURN",
         Array.isArray(possibleUrls)
@@ -311,7 +321,8 @@ function probeForTsFileInSamePathAsJsFile(
 function packageResolve(
   specifier: string,
   base: string | URL | undefined,
-  conditions: Set<string>
+  conditions: Set<string>,
+  isDirectory: IsDirectory
 ): ReadonlyArray<URL> {
   // Parse the specifier as a package name (package or @org/package) and separate out the sub-path
   const { packageName, packageSubpath, isScoped } = parsePackageName(
@@ -330,7 +341,12 @@ function packageResolve(
   if (selfResolved) return [selfResolved];
 
   // Find package.json by ascending the file system
-  const packageJsonMatch = findPackageJson(packageName, base, isScoped);
+  const packageJsonMatch = findPackageJson(
+    packageName,
+    base,
+    isScoped,
+    isDirectory
+  );
 
   // If package.json was found, resolve from it's exports or main field
   if (packageJsonMatch) {
@@ -363,7 +379,8 @@ function packageResolve(
 function findPackageJson(
   packageName: string,
   base: string | URL,
-  isScoped: boolean
+  isScoped: boolean,
+  isDirectory: IsDirectory
 ) {
   let packageJSONUrl = new URL(
     "./node_modules/" + packageName + "/package.json",
@@ -372,11 +389,15 @@ function findPackageJson(
   let packageJSONPath = fileURLToPath(packageJSONUrl);
   let lastPath;
   do {
-    const stat = tryStatSync(
-      // StringPrototypeSlice(packageJSONPath, 0, packageJSONPath.length - 13)
+    // const stat = tryStatSync(
+    //   // StringPrototypeSlice(packageJSONPath, 0, packageJSONPath.length - 13)
+    //   packageJSONPath.slice(0, packageJSONPath.length - 13)
+    // );
+    const isDir = isDirectory(
       packageJSONPath.slice(0, packageJSONPath.length - 13)
     );
-    if (!stat.isDirectory()) {
+    // if (!stat.isDirectory()) {
+    if (!isDir) {
       lastPath = packageJSONPath;
       packageJSONUrl = new URL(
         (isScoped ? "../../../../node_modules/" : "../../../node_modules/") +
@@ -456,12 +477,15 @@ function legacyMainResolve2(packageJSONUrl, packageConfig): ReadonlyArray<URL> {
   return guess;
 }
 
-/**
- * @param {string | URL} path
- * @returns {import('fs').Stats}
- */
-const tryStatSync = (path) =>
-  fs.statSync(path, { throwIfNoEntry: false }) ?? new fs.Stats();
+// // /**
+// //  * @param {string | URL} path
+// //  * @returns {import('fs').Stats}
+// //  */
+// // const tryStatSync = (path) =>
+// //   fs.statSync(path, { throwIfNoEntry: false }) ?? new fs.Stats();
+
+// const isDirectory = (path): boolean =>
+//   fs.statSync(path, { throwIfNoEntry: false })?.isDirectory() ?? false;
 
 // /**
 //  * @param {string | URL} url

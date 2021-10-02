@@ -5,7 +5,11 @@ test("Simple resolve", () => {
     "./hello.ts",
     { conditions: [], parentURL: undefined },
     "",
-    { cwd: () => "/abs/working/dir", fileExists: () => false }
+    {
+      cwd: () => "/abs/working/dir",
+      fileExists: () => false,
+      isDirectory: () => false,
+    }
   );
   expect(resolved.fileUrl).toBe("file:///abs/working/dir/hello.ts");
 });
