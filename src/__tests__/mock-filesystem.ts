@@ -1,4 +1,4 @@
-import { dirname } from "path";
+import { dirname, join } from "path";
 import { FileSystem } from "../filesystem";
 
 export type MockFilesystem = {
@@ -20,31 +20,41 @@ export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
       return result;
     },
     isDirectory: isDirectory(mfs),
-    getRealpath: (path: string) => {
-      // Should return undefined if the path does not exist
-      if (!pathExists(mfs, path)) {
-        return undefined;
-      }
-      // If the path is a link, return realpath, otherwise just return same path
-      const entry = mfs[path];
-      let result = path;
-      if (entry !== undefined && entry.type === "LinkEntry") {
-        result = entry.realPath;
-      }
-      // console.log("MOCK: getRealpath", path, result);
-      return result;
-    },
+    getRealpath: getRealPath(mfs),
     readFile: (path: string) => {
+      // TODO: The path may be a symlink so resolve to realpath before reading
       let result: string = undefined;
       const entry = mfs[path];
       if (entry !== undefined && entry.type === "JsonFileEntry") {
         result = JSON.stringify(entry.json);
       }
-      // console.log("MOCK: readFile", path, result);
+      console.log("MOCK: readFile", path, result);
       return result;
     },
   };
 }
+
+const getRealPath =
+  (mfs: MockFilesystem) =>
+  (path: string): string | undefined => {
+    // Check if the start of path matches a symlink path and if so resolve that part and try again
+    for (const [k, v] of Object.entries(mfs)) {
+      if (v.type === "LinkEntry") {
+        const realPath = v.realPath;
+        if (path.startsWith(k)) {
+          // Replace the matching start of path with the realpath
+          const remainingPath = path.substr(k.length);
+          const resolvedPath = realPath + remainingPath;
+          console.log("resolvedPath", resolvedPath);
+          return getRealPath(mfs)(resolvedPath);
+        }
+      }
+    }
+    // The path does not start with a link, so it is a realpath, check if it exists
+    const result = (pathExists(mfs, path) && path) || undefined;
+    console.log("getRealPath", path, result);
+    return result;
+  };
 
 function pathExists(mfs: MockFilesystem, path: string): boolean {
   for (const key of Object.keys(mfs)) {

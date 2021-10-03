@@ -317,6 +317,7 @@ function packageResolve(
       ).resolved;
       return per ? [per] : [];
     }
+    console.log("packageSubpath", packageSubpath);
     if (packageSubpath === ".")
       // return legacyMainResolve(packageJSONUrl, packageConfig, base);
       return legacyMainResolve2(packageJSONUrl, packageConfig);
@@ -384,6 +385,7 @@ function resolveSelf(base, packageName, packageSubpath, conditions, readFile: Re
  * @returns {URL}
  */
 function legacyMainResolve2(packageJSONUrl, packageConfig): ReadonlyArray<URL> {
+  console.log("legacyMainResolve2", packageJSONUrl, packageConfig);
   const guess: Array<URL> = [];
   if (packageConfig.main !== undefined) {
     guess.push(
