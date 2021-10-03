@@ -28,14 +28,14 @@ const {
   StringPrototypeStartsWith,
 } = require("./resolve-utils-support/node-primordials");
 const { getOptionValue } = require("./resolve-utils-support/node-options");
-const {
-  ERR_INVALID_ARG_VALUE,
-  ERR_INVALID_MODULE_SPECIFIER,
-  ERR_INVALID_PACKAGE_CONFIG,
-  ERR_INVALID_PACKAGE_TARGET,
-  ERR_PACKAGE_IMPORT_NOT_DEFINED,
-  ERR_PACKAGE_PATH_NOT_EXPORTED,
-} = require("./resolve-utils-support/node-errors").codes;
+// const {
+//   ERR_INVALID_ARG_VALUE,
+//   ERR_INVALID_MODULE_SPECIFIER,
+//   ERR_INVALID_PACKAGE_CONFIG,
+//   ERR_INVALID_PACKAGE_TARGET,
+//   ERR_PACKAGE_IMPORT_NOT_DEFINED,
+//   ERR_PACKAGE_PATH_NOT_EXPORTED,
+// } = require("./resolve-utils-support/node-errors").codes;
 // const packageJsonReader = require("./resolve-utils-support/node-package-json-reader");
 
 // Do not eagerly grab .manifest, it may be in TDZ
@@ -108,7 +108,7 @@ function emitTrailingSlashPatternDeprecation(match, pjsonUrl, isExports, base) {
 function getConditionsSet(conditions): Set<string> {
   if (conditions !== undefined && conditions !== DEFAULT_CONDITIONS) {
     if (!ArrayIsArray(conditions)) {
-      throw new ERR_INVALID_ARG_VALUE("conditions", conditions, "expected an array");
+      throw new codes.ERR_INVALID_ARG_VALUE("conditions", conditions, "expected an array");
     }
     return new SafeSet(conditions);
   }
@@ -147,7 +147,7 @@ function getPackageConfig(readFile, path, specifier, base?) {
   try {
     packageJSON = JSONParse(source);
   } catch (error: any) {
-    throw new ERR_INVALID_PACKAGE_CONFIG(
+    throw new codes.ERR_INVALID_PACKAGE_CONFIG(
       path,
       (base ? `"${specifier}" from ` : "") + fileURLToPath(base || specifier),
       error.message
@@ -214,7 +214,7 @@ function getPackageScopeConfig(resolved, readFile) {
  * @param {string | URL | undefined} base
  */
 function throwImportNotDefined(specifier, packageJSONUrl, base) {
-  throw new ERR_PACKAGE_IMPORT_NOT_DEFINED(
+  throw new codes.ERR_PACKAGE_IMPORT_NOT_DEFINED(
     specifier,
     packageJSONUrl && fileURLToPath(new URL(".", packageJSONUrl)),
     fileURLToPath(base)
@@ -227,7 +227,7 @@ function throwImportNotDefined(specifier, packageJSONUrl, base) {
  * @param {string | URL | undefined} base
  */
 function throwExportsNotFound(subpath, packageJSONUrl, base) {
-  throw new ERR_PACKAGE_PATH_NOT_EXPORTED(
+  throw new codes.ERR_PACKAGE_PATH_NOT_EXPORTED(
     fileURLToPath(new URL(".", packageJSONUrl)),
     subpath,
     base && fileURLToPath(base)
@@ -245,7 +245,7 @@ function throwInvalidSubpath(subpath, packageJSONUrl, internal, base) {
   const reason = `request is not a valid subpath for the "${
     internal ? "imports" : "exports"
   }" resolution of ${fileURLToPath(packageJSONUrl)}`;
-  throw new ERR_INVALID_MODULE_SPECIFIER(subpath, reason, base && fileURLToPath(base));
+  throw new codes.ERR_INVALID_MODULE_SPECIFIER(subpath, reason, base && fileURLToPath(base));
 }
 
 function throwInvalidPackageTarget(subpath, target, packageJSONUrl, internal, base) {
@@ -254,7 +254,7 @@ function throwInvalidPackageTarget(subpath, target, packageJSONUrl, internal, ba
   } else {
     target = `${target}`;
   }
-  throw new ERR_INVALID_PACKAGE_TARGET(
+  throw new codes.ERR_INVALID_PACKAGE_TARGET(
     fileURLToPath(new URL(".", packageJSONUrl)),
     subpath,
     target,
@@ -387,7 +387,7 @@ function resolvePackageTarget(
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
       if (isArrayIndex(key)) {
-        throw new ERR_INVALID_PACKAGE_CONFIG(
+        throw new codes.ERR_INVALID_PACKAGE_CONFIG(
           fileURLToPath(packageJSONUrl),
           base,
           '"exports" cannot contain numeric property keys.'
@@ -440,7 +440,7 @@ function isConditionalExportsMainSugar(exports, packageJSONUrl, base) {
     if (i++ === 0) {
       isConditionalSugar = curIsConditionalSugar;
     } else if (isConditionalSugar !== curIsConditionalSugar) {
-      throw new ERR_INVALID_PACKAGE_CONFIG(
+      throw new codes.ERR_INVALID_PACKAGE_CONFIG(
         fileURLToPath(packageJSONUrl),
         base,
         "\"exports\" cannot contain some keys starting with '.' and some not." +
@@ -563,7 +563,7 @@ function patternKeyCompare(a, b) {
 function packageImportsResolve(packageResolve, name, base, conditions, readFile) {
   if (name === "#" || StringPrototypeStartsWith(name, "#/")) {
     const reason = "is not a valid internal imports specifier name";
-    throw new ERR_INVALID_MODULE_SPECIFIER(name, reason, fileURLToPath(base));
+    throw new codes.ERR_INVALID_MODULE_SPECIFIER(name, reason, fileURLToPath(base));
   }
   let packageJSONUrl;
   const packageConfig = getPackageScopeConfig(base, readFile);
@@ -680,7 +680,7 @@ function parsePackageName(specifier, base) {
   }
 
   if (!validPackageName) {
-    throw new ERR_INVALID_MODULE_SPECIFIER(specifier, "is not a valid package name", fileURLToPath(base));
+    throw new codes.ERR_INVALID_MODULE_SPECIFIER(specifier, "is not a valid package name", fileURLToPath(base));
   }
 
   const packageSubpath = "." + (separatorIndex === -1 ? "" : StringPrototypeSlice(specifier, separatorIndex));
@@ -761,6 +761,38 @@ function internalModuleReadJSON(path, readFile) {
   // This would slow us down and, based on our usage, we can skip it.
   const containsKeys = true;
   return [string, containsKeys];
+}
+
+// FROM OTHER FILE node-errors.js
+
+const codes = {
+  ERR_INPUT_TYPE_NOT_ALLOWED: createErrorCtor(joinArgs("ERR_INPUT_TYPE_NOT_ALLOWED")),
+  ERR_INVALID_ARG_VALUE: createErrorCtor(joinArgs("ERR_INVALID_ARG_VALUE")),
+  ERR_INVALID_MODULE_SPECIFIER: createErrorCtor(joinArgs("ERR_INVALID_MODULE_SPECIFIER")),
+  ERR_INVALID_PACKAGE_CONFIG: createErrorCtor(joinArgs("ERR_INVALID_PACKAGE_CONFIG")),
+  ERR_INVALID_PACKAGE_TARGET: createErrorCtor(joinArgs("ERR_INVALID_PACKAGE_TARGET")),
+  ERR_MANIFEST_DEPENDENCY_MISSING: createErrorCtor(joinArgs("ERR_MANIFEST_DEPENDENCY_MISSING")),
+  ERR_MODULE_NOT_FOUND: createErrorCtor((path, base, type = "package") => {
+    return `Cannot find ${type} '${path}' imported from ${base}`;
+  }),
+  ERR_PACKAGE_IMPORT_NOT_DEFINED: createErrorCtor(joinArgs("ERR_PACKAGE_IMPORT_NOT_DEFINED")),
+  ERR_PACKAGE_PATH_NOT_EXPORTED: createErrorCtor(joinArgs("ERR_PACKAGE_PATH_NOT_EXPORTED")),
+  ERR_UNSUPPORTED_DIR_IMPORT: createErrorCtor(joinArgs("ERR_UNSUPPORTED_DIR_IMPORT")),
+  ERR_UNSUPPORTED_ESM_URL_SCHEME: createErrorCtor(joinArgs("ERR_UNSUPPORTED_ESM_URL_SCHEME")),
+};
+
+function joinArgs(name) {
+  return (...args) => {
+    return [name, ...args].join(" ");
+  };
+}
+
+function createErrorCtor(errorMessageCreator) {
+  return class CustomError extends Error {
+    constructor(...args) {
+      super(errorMessageCreator(...args));
+    }
+  };
 }
 
 // EXPORTS
