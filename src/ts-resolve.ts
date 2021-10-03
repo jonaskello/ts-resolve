@@ -12,7 +12,6 @@ import {
   packageExportsResolve,
 } from "./resolve_utils";
 import { createDefaultFilesystem, FileExists, FileSystem, GetRealpath, IsDirectory, ReadFile } from "./filesystem";
-import { readFileSync } from "fs";
 
 type TsConfigInfo = {
   tsconfigMap: Map<string, Tsconfig>;
