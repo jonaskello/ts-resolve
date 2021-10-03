@@ -25,9 +25,11 @@ const isDirectory =
   (path: string): boolean => {
     const realPath = getRealPath(mfs)(path);
     // Check if it is a file
-    const exactMatch = mfs[realPath];
-    if (isFileEntry(exactMatch)) {
-      return false;
+    if (realPath !== undefined) {
+      const exactMatch = mfs[realPath];
+      if (exactMatch !== undefined && isFileEntry(exactMatch)) {
+        return false;
+      }
     }
     // If the realpath exists but is not a file, then it is a dir
     return pathExists(mfs, path);
@@ -55,10 +57,12 @@ const getRealPath =
 
 const readFile = (mfs: MockFilesystem) => (path: string) => {
   const realPath = getRealPath(mfs)(path);
-  let result: string = undefined;
-  const entry = mfs[realPath];
-  if (entry !== undefined && entry.type === "JsonFile") {
-    result = JSON.stringify(entry.json);
+  let result: string | undefined = undefined;
+  if (realPath !== undefined) {
+    const entry = mfs[realPath];
+    if (entry !== undefined && entry.type === "JsonFile") {
+      result = JSON.stringify(entry.json);
+    }
   }
   return result;
 };

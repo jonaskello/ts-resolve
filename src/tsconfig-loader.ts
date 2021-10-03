@@ -31,8 +31,10 @@ export function loadTsconfig(
     if (!existsSync(configFilePath)) {
       return undefined;
     }
-
     const configString = readFileSync(configFilePath);
+    if (configString === undefined) {
+      return undefined;
+    }
     const cleanedJson = StripBom(configString);
     const config: Tsconfig = JSON5.parse(cleanedJson);
     let extendedConfig = config.extends;

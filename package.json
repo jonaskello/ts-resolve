@@ -12,6 +12,7 @@
   "devDependencies": {
     "@types/jest": "^27.0.2",
     "@types/node": "^16.9.1",
+    "@types/strip-bom": "^3.0.0",
     "esbuild": "^0.13.2",
     "jest": "^27.2.4",
     "prettier": "^2.4.1",
