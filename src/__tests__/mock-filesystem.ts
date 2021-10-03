@@ -8,7 +8,7 @@ export type MockFilesystem = {
 export type Entry = JsonFile | TsFile | Symlink;
 
 export type JsonFile = { type: "JsonFile"; json: object };
-export type TsFile = { type: "TsFile"; imports: ReadonlyArray<string> };
+export type TsFile = { type: "TsFile"; imports: ReadonlyArray<{ unresolved: string; resolved: string }> };
 export type Symlink = { type: "Symlink"; realPath: string };
 
 export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
