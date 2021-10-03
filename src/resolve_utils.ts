@@ -6,6 +6,7 @@ import { readFile } from "fs";
 
 export const foo = 42;
 
+const { URL, pathToFileURL, fileURLToPath } = require("url");
 const {
   ArrayIsArray,
   JSONParse,
@@ -27,10 +28,6 @@ const {
   StringPrototypeStartsWith,
 } = require("./resolve-utils-support/node-primordials");
 const { getOptionValue } = require("./resolve-utils-support/node-options");
-// Do not eagerly grab .manifest, it may be in TDZ
-const policy = getOptionValue("--experimental-policy") ? require("internal/process/policy") : null;
-const pendingDeprecation = getOptionValue("--pending-deprecation");
-const { URL, pathToFileURL, fileURLToPath } = require("url");
 const {
   ERR_INVALID_ARG_VALUE,
   ERR_INVALID_MODULE_SPECIFIER,
@@ -39,8 +36,11 @@ const {
   ERR_PACKAGE_IMPORT_NOT_DEFINED,
   ERR_PACKAGE_PATH_NOT_EXPORTED,
 } = require("./resolve-utils-support/node-errors").codes;
-
 const packageJsonReader = require("./resolve-utils-support/node-package-json-reader");
+
+// Do not eagerly grab .manifest, it may be in TDZ
+const pendingDeprecation = getOptionValue("--pending-deprecation");
+
 const userConditions = getOptionValue("--conditions");
 const noAddons = getOptionValue("--no-addons");
 const addonConditions = noAddons ? [] : ["node-addons"];
