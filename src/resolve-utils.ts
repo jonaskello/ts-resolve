@@ -367,7 +367,7 @@ function resolvePackageTarget(
   pattern,
   internal,
   conditions
-) {
+): URL {
   if (typeof target === "string") {
     return resolvePackageTargetString(
       packageResolve,
@@ -491,7 +491,14 @@ function isConditionalExportsMainSugar(exports, packageJSONUrl, base) {
  * @param {Set<string>} conditions
  * @returns {URL}
  */
-function packageExportsResolve(packageResolve, packageJSONUrl, packageSubpath, packageConfig, base, conditions) {
+function packageExportsResolve(
+  packageResolve,
+  packageJSONUrl,
+  packageSubpath,
+  packageConfig,
+  base,
+  conditions
+): { resolved: URL; exact: boolean } {
   let exports = packageConfig.exports;
   if (isConditionalExportsMainSugar(exports, packageJSONUrl, base)) exports = { ".": exports };
 
@@ -591,7 +598,7 @@ function patternKeyCompare(a, b) {
  * @param {Set<string>} conditions
  * @returns
  */
-function packageImportsResolve(packageResolve, name, base, conditions, readFile) {
+function packageImportsResolve(packageResolve, name, base, conditions, readFile): { resolved: URL; exact: boolean } {
   if (name === "#" || StringPrototypeStartsWith(name, "#/")) {
     const reason = "is not a valid internal imports specifier name";
     throw new codes.ERR_INVALID_MODULE_SPECIFIER(name, reason, fileURLToPath(base));
@@ -829,7 +836,12 @@ function createErrorCtor(errorMessageCreator) {
 // Extra functions added that are not part of the original file
 
 // This could probably be moved to a built-in API
-function findPackageJson(packageName: string, base: string | URL, isScoped: boolean, isDirectory: IsDirectory) {
+function findPackageJson(
+  packageName: string,
+  base: string | URL | undefined,
+  isScoped: boolean,
+  isDirectory: IsDirectory
+) {
   let packageJSONUrl = new URL("./node_modules/" + packageName + "/package.json", base);
   let packageJSONPath = fileURLToPath(packageJSONUrl);
   let lastPath;
@@ -859,7 +871,7 @@ function findPackageJson(packageName: string, base: string | URL, isScoped: bool
 
 // This could probably be moved to a built-in API
 // However it needs packageResolve since it calls into packageExportsResolve()
-function resolveSelf(packageResolve, base, packageName, packageSubpath, conditions, readFile: ReadFile) {
+function resolveSelf(packageResolve, base, packageName, packageSubpath, conditions, readFile: ReadFile): URL {
   const packageConfig = getPackageScopeConfig(base, readFile);
   if (packageConfig.exists) {
     const packageJSONUrl = pathToFileURL(packageConfig.pjsonPath);
