@@ -22,7 +22,6 @@ export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
     isDirectory: isDirectory(mfs),
     getRealpath: getRealPath(mfs),
     readFile: (path: string) => {
-      // TODO: The path may be a symlink so resolve to realpath before reading
       const realPath = getRealPath(mfs)(path);
       let result: string = undefined;
       const entry = mfs[realPath];
