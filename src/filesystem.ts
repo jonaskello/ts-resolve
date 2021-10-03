@@ -2,13 +2,13 @@ import fs from "fs";
 
 export type FileSystem = {
   readonly cwd: () => string;
-  readonly fileExists: FileExists;
+  readonly isFile: IsFile;
   readonly isDirectory: IsDirectory;
   readonly getRealpath: GetRealpath;
   readonly readFile: ReadFile;
 };
 
-export type FileExists = (path: string) => boolean;
+export type IsFile = (path: string) => boolean;
 export type IsDirectory = (path: string) => boolean;
 export type GetRealpath = (path: string) => string | undefined;
 export type ReadFile = (filename: string) => string | undefined;
@@ -16,7 +16,7 @@ export type ReadFile = (filename: string) => string | undefined;
 export function createDefaultFilesystem(): FileSystem {
   return {
     cwd: process.cwd,
-    fileExists: (url: string) => {
+    isFile: (url: string) => {
       try {
         return fs.statSync(url, { throwIfNoEntry: false })?.isFile() ?? false;
       } catch (e) {

@@ -11,7 +11,7 @@ import {
   packageImportsResolve,
   packageExportsResolve,
 } from "./resolve_utils";
-import { createDefaultFilesystem, FileExists, FileSystem, GetRealpath, IsDirectory, ReadFile } from "./filesystem";
+import { createDefaultFilesystem, IsFile, FileSystem, GetRealpath, IsDirectory, ReadFile } from "./filesystem";
 
 type TsConfigInfo = {
   tsconfigMap: Map<string, Tsconfig>;
@@ -75,7 +75,7 @@ export function tsResolve(
       entryTsConfig,
       fileystem.cwd(),
       fileystem.isDirectory,
-      fileystem.fileExists,
+      fileystem.isFile,
       fileystem.readFile
     );
     entryTsConfigInfoCache.set(entryTsConfig, tsConfigInfo);
@@ -139,7 +139,7 @@ function tsModuleResolve(
     // }
     console.log("myModuleResolve: resolved", resolved.href);
 
-    const tsFileUrl = probeForTsFileInSamePathAsJsFile(resolved, filesystem.fileExists);
+    const tsFileUrl = probeForTsFileInSamePathAsJsFile(resolved, filesystem.isFile);
     if (tsFileUrl !== undefined) {
       // This file belongs to the same TsConfig as it's ParentUrl, but we don't know
       // which TsConfig the ParentUrl belongs to....
@@ -178,7 +178,7 @@ function tsModuleResolve(
     if (possibleSourceLocation !== undefined) {
       const { fileUrl, tsConfigAbsPath } = possibleSourceLocation;
       //
-      const tsFile = probeForTsFileInSamePathAsJsFile(fileUrl, filesystem.fileExists);
+      const tsFile = probeForTsFileInSamePathAsJsFile(fileUrl, filesystem.isFile);
       if (tsFile !== undefined) {
         console.log("---------> RESOLVED BARE SPECIFIER: ", tsFile.href);
         // finalizeResolution checks for old file endings if getOptionValue("--experimental-specifier-resolution") === "node"
@@ -263,7 +263,7 @@ function realPathOfSymlinkedUrl(inputUrl: URL, getRealPath: GetRealpath): URL {
  * Given a file with a javascript extension, probe for a file with
  * typescript extension in the exact same path.
  */
-function probeForTsFileInSamePathAsJsFile(jsFileUrl: URL, fileExists: FileExists): URL | undefined {
+function probeForTsFileInSamePathAsJsFile(jsFileUrl: URL, fileExists: IsFile): URL | undefined {
   // The jsFile can be extensionless or have another extension
   // so we remove any extension and try with .ts and .tsx
   const jsFilePath = fileURLToPath(jsFileUrl);
@@ -420,7 +420,7 @@ function buildTsConfigInfo(
   entryTsConfig: string,
   cwd: string,
   isDirectory: IsDirectory,
-  fileExists: FileExists,
+  fileExists: IsFile,
   readFile: ReadFile
 ): TsConfigInfo {
   const tsconfigMap = loadTsConfigAndResolveReferences(entryTsConfig, cwd, isDirectory, fileExists, readFile);
@@ -442,7 +442,7 @@ export function loadTsConfigAndResolveReferences(
   entryTsConfig: string,
   cwd: string,
   isDirectory: IsDirectory,
-  fileExists: FileExists,
+  fileExists: IsFile,
   readFile: ReadFile
 ): Map<string, Tsconfig> {
   const tsconfigMap = new Map();
@@ -463,7 +463,7 @@ function loadTsConfigAndResolveReferencesRecursive(
   refs: Array<{ path: string }>,
   tsconfigMap: Map<string, Tsconfig>,
   isDirectory: IsDirectory,
-  fileExists: FileExists,
+  fileExists: IsFile,
   readFile: ReadFile
 ): Map<string, Tsconfig> {
   for (const ref of refs) {
