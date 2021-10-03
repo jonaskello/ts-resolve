@@ -36,7 +36,7 @@ const {
   ERR_PACKAGE_IMPORT_NOT_DEFINED,
   ERR_PACKAGE_PATH_NOT_EXPORTED,
 } = require("./resolve-utils-support/node-errors").codes;
-const packageJsonReader = require("./resolve-utils-support/node-package-json-reader");
+// const packageJsonReader = require("./resolve-utils-support/node-package-json-reader");
 
 // Do not eagerly grab .manifest, it may be in TDZ
 const pendingDeprecation = getOptionValue("--pending-deprecation");
@@ -128,7 +128,7 @@ function getPackageConfig(readFile, path, specifier, base?) {
   if (existing !== undefined) {
     return existing;
   }
-  const source = packageJsonReader.read(path, readFile).string;
+  const source = packageJsonReaderRead(path, readFile).string;
   if (source === undefined) {
     const packageConfig = {
       pjsonPath: path,
@@ -703,6 +703,67 @@ function shouldBeTreatedAsRelativeOrAbsolutePath(specifier) {
   if (specifier[0] === "/") return true;
   return isRelativeSpecifier(specifier);
 }
+
+// FROM OTHER FILE node-package-json-reader.js
+
+// copied from https://github.com/nodejs/node/blob/v15.3.0/lib/internal/modules/package_json_reader.js
+("use strict");
+
+const { toNamespacedPath } = require("path");
+
+const cache = new SafeMap();
+
+let manifest;
+
+/**
+ * @param {string} jsonPath
+ * @return {[string, boolean]}
+ */
+function packageJsonReaderRead(jsonPath, readFile) {
+  if (cache.has(jsonPath)) {
+    return cache.get(jsonPath);
+  }
+
+  const [string, containsKeys] = internalModuleReadJSON(toNamespacedPath(jsonPath), readFile);
+  const result = { string, containsKeys };
+  if (string !== undefined) {
+    if (manifest === undefined) {
+      // manifest = getOptionValue('--experimental-policy') ?
+      //   require('internal/process/policy').manifest :
+      //   null;
+      // disabled for now.  I am not sure if/how we should support this
+      manifest = null;
+    }
+    if (manifest !== null) {
+      const jsonURL = pathToFileURL(jsonPath);
+      manifest.assertIntegrity(jsonURL, string);
+    }
+  }
+  cache.set(jsonPath, result);
+  return result;
+}
+
+// FROM OTHER FILE node-internal-fs.js
+
+// In node's core, this is implemented in C
+// https://github.com/nodejs/node/blob/v15.3.0/src/node_file.cc#L891-L985
+function internalModuleReadJSON(path, readFile) {
+  let string;
+  try {
+    // string = fs.readFileSync(path, "utf8");
+    string = readFile(path);
+  } catch (e) {
+    if (e.code === "ENOENT") return [];
+    throw e;
+  }
+  // Node's implementation checks for the presence of relevant keys: main, name, type, exports, imports
+  // Node does this for performance to skip unnecessary parsing.
+  // This would slow us down and, based on our usage, we can skip it.
+  const containsKeys = true;
+  return [string, containsKeys];
+}
+
+// EXPORTS
 
 export {
   getConditionsSet,
