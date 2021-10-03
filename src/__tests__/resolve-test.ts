@@ -1,5 +1,6 @@
 import { pathToFileURL, fileURLToPath } from "url";
-import { clearCache, tsResolve } from "../ts-resolve";
+import { tsResolve } from "../ts-resolve";
+import { clearCache } from "../tsconfig-info";
 import { createFilesystem, MockFilesystem } from "./mock-filesystem";
 import { UtilsTest } from "./test-utils";
 

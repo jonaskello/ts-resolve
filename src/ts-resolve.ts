@@ -14,13 +14,7 @@ import {
   legacyMainResolve2,
 } from "./resolve-utils";
 import { createDefaultFilesystem, IsFile, FileSystem, GetRealpath, IsDirectory, ReadFile } from "./filesystem";
-import { buildTsConfigInfo, TsConfigInfo } from "./tsconfig-info";
-
-let entryTsConfigInfoCache: Map<string, TsConfigInfo> = new Map();
-
-export function clearCache(): void {
-  entryTsConfigInfoCache = new Map();
-}
+import { buildTsConfigInfo, getTsConfigInfo, TsConfigInfo } from "./tsconfig-info";
 
 export type ResolveContext = {
   readonly conditions: ReadonlyArray<string>;
@@ -50,9 +44,12 @@ export function tsResolve(
 
   // Fallback for entry tsconfig.json
   const entryTsConfig = tsConfigPathIn ?? process.env["TS_NODE_PROJECT"];
+  if (entryTsConfig === undefined || entryTsConfig === null || entryTsConfig === "") {
+    throw new Error("Entry tsconfig file must be passed or present in TS_NODE_PROJECT.");
+  }
 
   // Fallback to default filesystem
-  const fileystem = fileSystemIn ?? createDefaultFilesystem();
+  const filesystem = fileSystemIn ?? createDefaultFilesystem();
 
   console.log("RESOLVE: START");
 
@@ -64,24 +61,11 @@ export function tsResolve(
   let { parentURL: parentURLIn, conditions } = context;
 
   // If parentURL was not specified, then we use cwd
-  const parentURL = parentURLIn ?? fileystem?.cwd() ?? process.cwd();
+  const parentURL = parentURLIn ?? filesystem?.cwd() ?? process.cwd();
   console.log("RESOLVE: parentURL", parentURL);
 
-  // Build tsconfig map if we don't have it
-  if (entryTsConfig === undefined || entryTsConfig === null || entryTsConfig === "") {
-    throw new Error("Entry tsconfig file must be passed or present in TS_NODE_PROJECT.");
-  }
-  let tsConfigInfo = entryTsConfigInfoCache.get(entryTsConfig);
-  if (tsConfigInfo === undefined) {
-    tsConfigInfo = buildTsConfigInfo(
-      entryTsConfig,
-      fileystem.cwd(),
-      fileystem.isDirectory,
-      fileystem.isFile,
-      fileystem.readFile
-    );
-    entryTsConfigInfoCache.set(entryTsConfig, tsConfigInfo);
-  }
+  // Get tsconfig info (it can be cached)
+  const tsConfigInfo = getTsConfigInfo(filesystem, entryTsConfig);
 
   // If file explicitly ends in .ts then just return it
   // This can only happen for the entry file as typescript does not allow
@@ -101,7 +85,7 @@ export function tsResolve(
 
   // Try to resolve to a typescript file, returns undefined if it could not be resolved
   const conditionsSet = getConditionsSet(conditions);
-  const resolved = tsModuleResolve(specifier, parentURL, conditionsSet, tsConfigInfo, fileystem);
+  const resolved = tsModuleResolve(specifier, parentURL, conditionsSet, tsConfigInfo, filesystem);
   return resolved;
 }
 

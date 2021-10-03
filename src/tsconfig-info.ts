@@ -1,11 +1,31 @@
 import path from "path";
 import { loadTsconfig, Tsconfig } from "./tsconfig-loader";
-import { IsFile, IsDirectory, ReadFile } from "./filesystem";
+import { IsFile, IsDirectory, ReadFile, FileSystem } from "./filesystem";
 
 export type TsConfigInfo = {
   tsconfigMap: Map<string, Tsconfig>;
   absOutDirToTsConfig: Map<string, string>;
 };
+let entryTsConfigInfoCache: Map<string, TsConfigInfo> = new Map();
+
+export function clearCache(): void {
+  entryTsConfigInfoCache = new Map();
+}
+
+export function getTsConfigInfo(fileystem: FileSystem, entryTsConfig: string): TsConfigInfo {
+  let tsConfigInfo = entryTsConfigInfoCache.get(entryTsConfig);
+  if (tsConfigInfo === undefined) {
+    tsConfigInfo = buildTsConfigInfo(
+      entryTsConfig,
+      fileystem.cwd(),
+      fileystem.isDirectory,
+      fileystem.isFile,
+      fileystem.readFile
+    );
+    entryTsConfigInfoCache.set(entryTsConfig, tsConfigInfo);
+  }
+  return tsConfigInfo;
+}
 
 export function buildTsConfigInfo(
   entryTsConfig: string,
