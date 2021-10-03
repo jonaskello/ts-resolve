@@ -38,6 +38,7 @@ const mfs: MockFilesystem = {
 };
 
 export const testCase: ResolveTest = {
+  testName: "Multiple packages",
   entryTsConfig: "./packages/server/tsconfig.json",
   unsresolvedEntryTsFilePath: "./packages/server/src/server.ts",
   resolvedFileUrl: "file:///root/packages/server/src/server.ts",

@@ -18,7 +18,11 @@ type TsConfigInfo = {
   absOutDirToTsConfig: Map<string, string>;
 };
 
-const entryTsConfigInfoCache: Map<string, TsConfigInfo> = new Map();
+let entryTsConfigInfoCache: Map<string, TsConfigInfo> = new Map();
+
+export function clearCache(): void {
+  entryTsConfigInfoCache = new Map();
+}
 
 export type ResolveContext = {
   readonly conditions: ReadonlyArray<string>;
