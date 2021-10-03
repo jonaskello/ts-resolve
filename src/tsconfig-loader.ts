@@ -25,7 +25,7 @@ export interface Tsconfig {
 export function loadTsconfig(
   configFilePath: string,
   existsSync: (path: string) => boolean,
-  readFileSync: (filename: string) => string
+  readFileSync: (filename: string) => string | undefined
 ): Tsconfig | undefined {
   try {
     if (!existsSync(configFilePath)) {

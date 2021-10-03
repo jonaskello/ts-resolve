@@ -388,7 +388,7 @@ function resolveSelf(base, packageName, packageSubpath, conditions, readFile: Re
  * @param {string | URL | undefined} base
  * @returns {URL}
  */
-function legacyMainResolve2(packageJSONUrl, packageConfig): ReadonlyArray<URL> {
+function legacyMainResolve2(packageJSONUrl: string | URL, packageConfig): ReadonlyArray<URL> {
   console.log("legacyMainResolve2", packageJSONUrl, packageConfig);
   const guess: Array<URL> = [];
   if (packageConfig.main !== undefined) {
@@ -415,7 +415,7 @@ function legacyMainResolve2(packageJSONUrl, packageConfig): ReadonlyArray<URL> {
   return guess;
 }
 
-function isTypescriptFile(url) {
+function isTypescriptFile(url: string) {
   const extensionsRegex = /\.ts$/;
   return extensionsRegex.test(url);
 }
