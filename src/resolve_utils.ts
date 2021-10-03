@@ -27,22 +27,15 @@ const {
   StringPrototypeSlice,
   StringPrototypeStartsWith,
 } = require("./resolve-utils-support/node-primordials");
-const { getOptionValue } = require("./resolve-utils-support/node-options");
-// const {
-//   ERR_INVALID_ARG_VALUE,
-//   ERR_INVALID_MODULE_SPECIFIER,
-//   ERR_INVALID_PACKAGE_CONFIG,
-//   ERR_INVALID_PACKAGE_TARGET,
-//   ERR_PACKAGE_IMPORT_NOT_DEFINED,
-//   ERR_PACKAGE_PATH_NOT_EXPORTED,
-// } = require("./resolve-utils-support/node-errors").codes;
-// const packageJsonReader = require("./resolve-utils-support/node-package-json-reader");
 
 // Do not eagerly grab .manifest, it may be in TDZ
-const pendingDeprecation = getOptionValue("--pending-deprecation");
+// const pendingDeprecation = getOptionValue("--pending-deprecation");
+const pendingDeprecation = "";
+// const userConditions = getOptionValue("--conditions");
+const userConditions = "";
+// const noAddons = getOptionValue("--no-addons");
+const noAddons = "";
 
-const userConditions = getOptionValue("--conditions");
-const noAddons = getOptionValue("--no-addons");
 const addonConditions = noAddons ? [] : ["node-addons"];
 
 const DEFAULT_CONDITIONS = ObjectFreeze(["node", "import", ...addonConditions, ...userConditions]);
