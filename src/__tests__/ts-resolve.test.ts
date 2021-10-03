@@ -81,5 +81,5 @@ test.only("Bare specifier, link to package referenced in tsconfig", () => {
     entryTsConfig,
     fileSystem
   );
-  expect(resolved?.fileUrl).toBe("file:///root/packages/server/src/start-server.ts");
+  expect(resolved?.fileUrl).toBe("file:///root/packages/shared/src/index.ts");
 });

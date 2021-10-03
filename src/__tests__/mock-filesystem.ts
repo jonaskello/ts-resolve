@@ -23,8 +23,9 @@ export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
     getRealpath: getRealPath(mfs),
     readFile: (path: string) => {
       // TODO: The path may be a symlink so resolve to realpath before reading
+      const realPath = getRealPath(mfs)(path);
       let result: string = undefined;
-      const entry = mfs[path];
+      const entry = mfs[realPath];
       if (entry !== undefined && entry.type === "JsonFileEntry") {
         result = JSON.stringify(entry.json);
       }
