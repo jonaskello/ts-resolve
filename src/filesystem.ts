@@ -16,13 +16,7 @@ export type ReadFile = (filename: string) => string | undefined;
 export function createDefaultFilesystem(): FileSystem {
   return {
     cwd: process.cwd,
-    isFile: (url: string) => {
-      try {
-        return fs.statSync(url, { throwIfNoEntry: false })?.isFile() ?? false;
-      } catch (e) {
-        return false;
-      }
-    },
+    isFile: (url: string) => fs.statSync(url, { throwIfNoEntry: false })?.isFile() ?? false,
     isDirectory: (path: string) => fs.statSync(path, { throwIfNoEntry: false })?.isDirectory() ?? false,
     getRealpath: (path: string) => {
       try {
