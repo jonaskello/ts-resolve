@@ -4,12 +4,14 @@ import { loadTsconfig, Tsconfig } from "./tsconfig-loader";
 
 import {
   getPackageConfig, // getPackageConfig does filesystem access
-  getPackageScopeConfig, // getPackageScopeConfig calls getPackageConfig
   shouldBeTreatedAsRelativeOrAbsolutePath,
   parsePackageName,
   getConditionsSet,
   packageImportsResolve,
   packageExportsResolve,
+  resolveSelf,
+  findPackageJson,
+  legacyMainResolve2,
 } from "./resolve-utils";
 import { createDefaultFilesystem, IsFile, FileSystem, GetRealpath, IsDirectory, ReadFile } from "./filesystem";
 
@@ -267,16 +269,16 @@ function realPathOfSymlinkedUrl(inputUrl: URL, getRealPath: GetRealpath): URL {
  * Given a file with a javascript extension, probe for a file with
  * typescript extension in the exact same path.
  */
-function probeForTsFileInSamePathAsJsFile(jsFileUrl: URL, fileExists: IsFile): URL | undefined {
+function probeForTsFileInSamePathAsJsFile(jsFileUrl: URL, isFile: IsFile): URL | undefined {
   // The jsFile can be extensionless or have another extension
   // so we remove any extension and try with .ts and .tsx
   const jsFilePath = fileURLToPath(jsFileUrl);
   const parsedPath = path.parse(jsFilePath);
   const extensionless = path.join(parsedPath.dir, parsedPath.name);
-  if (fileExists(extensionless + ".ts")) {
+  if (isFile(extensionless + ".ts")) {
     return pathToFileURL(extensionless + ".ts");
   }
-  if (fileExists(extensionless + ".tsx")) {
+  if (isFile(extensionless + ".tsx")) {
     return pathToFileURL(extensionless + ".tsx");
   }
 }
@@ -300,7 +302,7 @@ function packageResolve(
 
   // ResolveSelf
   // Check if the specifier resolves to the same package we are resolving from
-  const selfResolved = resolveSelf(base, packageName, packageSubpath, conditions, readFile);
+  const selfResolved = resolveSelf(packageResolve, base, packageName, packageSubpath, conditions, readFile);
   if (selfResolved) return [selfResolved];
 
   // Find package.json by ascending the file system
@@ -334,87 +336,6 @@ function packageResolve(
   return [];
 }
 
-// This could probably be moved to a built-in API
-function findPackageJson(packageName: string, base: string | URL, isScoped: boolean, isDirectory: IsDirectory) {
-  let packageJSONUrl = new URL("./node_modules/" + packageName + "/package.json", base);
-  let packageJSONPath = fileURLToPath(packageJSONUrl);
-  let lastPath;
-  do {
-    // const stat = tryStatSync(
-    //   // StringPrototypeSlice(packageJSONPath, 0, packageJSONPath.length - 13)
-    //   packageJSONPath.slice(0, packageJSONPath.length - 13)
-    // );
-    const isDir = isDirectory(packageJSONPath.slice(0, packageJSONPath.length - 13));
-    // if (!stat.isDirectory()) {
-    if (!isDir) {
-      lastPath = packageJSONPath;
-      packageJSONUrl = new URL(
-        (isScoped ? "../../../../node_modules/" : "../../../node_modules/") + packageName + "/package.json",
-        packageJSONUrl
-      );
-      packageJSONPath = fileURLToPath(packageJSONUrl);
-      continue;
-    }
-
-    // Package match.
-    return [packageJSONUrl, packageJSONPath];
-    // Cross-platform root check.
-  } while (packageJSONPath.length !== lastPath.length);
-  return undefined;
-}
-
-// This could probably be moved to a built-in API
-// However it needs packageResolve since it calls into packageExportsResolve()
-function resolveSelf(base, packageName, packageSubpath, conditions, readFile: ReadFile) {
-  const packageConfig = getPackageScopeConfig(base, readFile);
-  if (packageConfig.exists) {
-    const packageJSONUrl = pathToFileURL(packageConfig.pjsonPath);
-    if (packageConfig.name === packageName && packageConfig.exports !== undefined && packageConfig.exports !== null) {
-      return packageExportsResolve(packageResolve, packageJSONUrl, packageSubpath, packageConfig, base, conditions)
-        .resolved;
-    }
-  }
-  return undefined;
-}
-
-/**
- * Legacy CommonJS main resolution:
- * 1. let M = pkg_url + (json main field)
- * 2. TRY(M, M.js, M.json, M.node)
- * 3. TRY(M/index.js, M/index.json, M/index.node)
- * 4. TRY(pkg_url/index.js, pkg_url/index.json, pkg_url/index.node)
- * 5. NOT_FOUND
- * @param {PackageConfig} packageConfig
- * @param {string | URL | undefined} base
- * @returns {URL}
- */
-function legacyMainResolve2(packageJSONUrl: string | URL, packageConfig): ReadonlyArray<URL> {
-  console.log("legacyMainResolve2", packageJSONUrl, packageConfig);
-  const guess: Array<URL> = [];
-  if (packageConfig.main !== undefined) {
-    guess.push(
-      ...[
-        new URL(`./${packageConfig.main}.node`, packageJSONUrl),
-        new URL(`./${packageConfig.main}`, packageJSONUrl),
-        new URL(`./${packageConfig.main}.js`, packageJSONUrl),
-        new URL(`./${packageConfig.main}.json`, packageJSONUrl),
-        new URL(`./${packageConfig.main}.node`, packageJSONUrl),
-        new URL(`./${packageConfig.main}/index.js`, packageJSONUrl),
-        new URL(`./${packageConfig.main}/index.json`, packageJSONUrl),
-        new URL(`./${packageConfig.main}/index.node`, packageJSONUrl),
-      ]
-    );
-  }
-  guess.push(
-    ...[
-      new URL("./index.js", packageJSONUrl),
-      new URL("./index.json", packageJSONUrl),
-      new URL("./index.node", packageJSONUrl),
-    ]
-  );
-  return guess;
-}
-
 function isTypescriptFile(url: string) {
   const extensionsRegex = /\.ts$/;
   return extensionsRegex.test(url);
@@ -424,10 +345,10 @@ function buildTsConfigInfo(
   entryTsConfig: string,
   cwd: string,
   isDirectory: IsDirectory,
-  fileExists: IsFile,
+  isFile: IsFile,
   readFile: ReadFile
 ): TsConfigInfo {
-  const tsconfigMap = loadTsConfigAndResolveReferences(entryTsConfig, cwd, isDirectory, fileExists, readFile);
+  const tsconfigMap = loadTsConfigAndResolveReferences(entryTsConfig, cwd, isDirectory, isFile, readFile);
   const absOutDirToTsConfig = new Map();
   for (const [k, v] of tsconfigMap.entries()) {
     if (v.compilerOptions?.outDir === undefined) {
@@ -446,19 +367,12 @@ export function loadTsConfigAndResolveReferences(
   entryTsConfig: string,
   cwd: string,
   isDirectory: IsDirectory,
-  fileExists: IsFile,
+  isFile: IsFile,
   readFile: ReadFile
 ): Map<string, Tsconfig> {
   const tsconfigMap = new Map();
   console.log(`entryTsConfig = '${entryTsConfig}'`);
-  loadTsConfigAndResolveReferencesRecursive(
-    cwd,
-    [{ path: entryTsConfig }],
-    tsconfigMap,
-    isDirectory,
-    fileExists,
-    readFile
-  );
+  loadTsConfigAndResolveReferencesRecursive(cwd, [{ path: entryTsConfig }], tsconfigMap, isDirectory, isFile, readFile);
   return tsconfigMap;
 }
 
@@ -467,7 +381,7 @@ function loadTsConfigAndResolveReferencesRecursive(
   refs: Array<{ path: string }>,
   tsconfigMap: Map<string, Tsconfig>,
   isDirectory: IsDirectory,
-  fileExists: IsFile,
+  isFile: IsFile,
   readFile: ReadFile
 ): Map<string, Tsconfig> {
   for (const ref of refs) {
@@ -476,7 +390,7 @@ function loadTsConfigAndResolveReferencesRecursive(
     if (isDirectory(fullPath)) {
       fullPath = path.join(fullPath, "tsconfig.json");
     }
-    const tsconfig = loadTsconfig(fullPath, fileExists, readFile);
+    const tsconfig = loadTsconfig(fullPath, isFile, readFile);
     if (!tsconfig) {
       throw new Error(`Could not find tsconfig in path '${fullPath}'.`);
     }
@@ -486,7 +400,7 @@ function loadTsConfigAndResolveReferencesRecursive(
       tsconfig?.references ?? [],
       tsconfigMap,
       isDirectory,
-      fileExists,
+      isFile,
       readFile
     );
   }

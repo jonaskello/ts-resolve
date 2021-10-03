@@ -2,7 +2,10 @@
 
 // "use strict";
 
-const { URL, pathToFileURL, fileURLToPath } = require("url");
+const { pathToFileURL, fileURLToPath } = require("url");
+
+import { URL } from "url";
+import { IsDirectory, ReadFile } from "./filesystem";
 
 const primordials = {
   ArrayFrom: Array.from,
@@ -823,14 +826,100 @@ function createErrorCtor(errorMessageCreator) {
   };
 }
 
+// Extra functions added that are not part of the original file
+
+// This could probably be moved to a built-in API
+function findPackageJson(packageName: string, base: string | URL, isScoped: boolean, isDirectory: IsDirectory) {
+  let packageJSONUrl = new URL("./node_modules/" + packageName + "/package.json", base);
+  let packageJSONPath = fileURLToPath(packageJSONUrl);
+  let lastPath;
+  do {
+    // const stat = tryStatSync(
+    //   // StringPrototypeSlice(packageJSONPath, 0, packageJSONPath.length - 13)
+    //   packageJSONPath.slice(0, packageJSONPath.length - 13)
+    // );
+    const isDir = isDirectory(packageJSONPath.slice(0, packageJSONPath.length - 13));
+    // if (!stat.isDirectory()) {
+    if (!isDir) {
+      lastPath = packageJSONPath;
+      packageJSONUrl = new URL(
+        (isScoped ? "../../../../node_modules/" : "../../../node_modules/") + packageName + "/package.json",
+        packageJSONUrl
+      );
+      packageJSONPath = fileURLToPath(packageJSONUrl);
+      continue;
+    }
+
+    // Package match.
+    return [packageJSONUrl, packageJSONPath];
+    // Cross-platform root check.
+  } while (packageJSONPath.length !== lastPath.length);
+  return undefined;
+}
+
+// This could probably be moved to a built-in API
+// However it needs packageResolve since it calls into packageExportsResolve()
+function resolveSelf(packageResolve, base, packageName, packageSubpath, conditions, readFile: ReadFile) {
+  const packageConfig = getPackageScopeConfig(base, readFile);
+  if (packageConfig.exists) {
+    const packageJSONUrl = pathToFileURL(packageConfig.pjsonPath);
+    if (packageConfig.name === packageName && packageConfig.exports !== undefined && packageConfig.exports !== null) {
+      return packageExportsResolve(packageResolve, packageJSONUrl, packageSubpath, packageConfig, base, conditions)
+        .resolved;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Legacy CommonJS main resolution:
+ * 1. let M = pkg_url + (json main field)
+ * 2. TRY(M, M.js, M.json, M.node)
+ * 3. TRY(M/index.js, M/index.json, M/index.node)
+ * 4. TRY(pkg_url/index.js, pkg_url/index.json, pkg_url/index.node)
+ * 5. NOT_FOUND
+ * @param {PackageConfig} packageConfig
+ * @param {string | URL | undefined} base
+ * @returns {URL}
+ */
+function legacyMainResolve2(packageJSONUrl: string | URL, packageConfig): ReadonlyArray<URL> {
+  console.log("legacyMainResolve2", packageJSONUrl, packageConfig);
+  const guess: Array<URL> = [];
+  if (packageConfig.main !== undefined) {
+    guess.push(
+      ...[
+        new URL(`./${packageConfig.main}.node`, packageJSONUrl),
+        new URL(`./${packageConfig.main}`, packageJSONUrl),
+        new URL(`./${packageConfig.main}.js`, packageJSONUrl),
+        new URL(`./${packageConfig.main}.json`, packageJSONUrl),
+        new URL(`./${packageConfig.main}.node`, packageJSONUrl),
+        new URL(`./${packageConfig.main}/index.js`, packageJSONUrl),
+        new URL(`./${packageConfig.main}/index.json`, packageJSONUrl),
+        new URL(`./${packageConfig.main}/index.node`, packageJSONUrl),
+      ]
+    );
+  }
+  guess.push(
+    ...[
+      new URL("./index.js", packageJSONUrl),
+      new URL("./index.json", packageJSONUrl),
+      new URL("./index.node", packageJSONUrl),
+    ]
+  );
+  return guess;
+}
+
 // EXPORTS
 
 export {
   getPackageConfig,
-  getPackageScopeConfig,
+  // getPackageScopeConfig,
   getConditionsSet,
   shouldBeTreatedAsRelativeOrAbsolutePath,
   packageImportsResolve,
   packageExportsResolve,
   parsePackageName,
+  legacyMainResolve2,
+  resolveSelf,
+  findPackageJson,
 };
