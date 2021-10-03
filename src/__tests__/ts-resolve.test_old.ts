@@ -1,6 +1,8 @@
 import { fileURLToPath, pathToFileURL } from "url";
 import { tsResolve } from "../ts-resolve";
 import { MockFilesystem, createFilesystem } from "./mock-filesystem";
+import { runTest } from "./resolve-test";
+import { testCase as case1 } from "./resolve-tests/case1";
 
 const mfs: MockFilesystem = {
   // server
@@ -38,7 +40,8 @@ const mfs: MockFilesystem = {
   "/root/node_modules/@app/shared": { type: "Symlink", realPath: "/root/packages/shared" },
 };
 
-const fileSystem = createFilesystem(mfs, "/root");
+const cwd = "/root";
+const fileSystem = createFilesystem(mfs, cwd);
 
 const entryTsConfig = "./packages/server/tsconfig.json";
 
@@ -73,21 +76,13 @@ test("Bare specifier, link to package referenced in tsconfig", () => {
   expect(resolved?.fileUrl).toBe("file:///root/packages/shared/src/index.ts");
 });
 
-test.only("Resolve all", () => {
-  // parentURL is undefined for the entry file
-  const importsStack: Array<readonly [parentURL: string, unresolved: string, resolved: string]> = [];
-  importsStack.push([undefined, "./packages/server/src/server.ts", "file:///root/packages/server/src/server.ts"]);
-  while (importsStack.length > 0) {
-    const [parentURL, unresolvedUrl, expectedUrl] = importsStack.pop();
-    const resolved = tsResolve(unresolvedUrl, { conditions: [], parentURL }, entryTsConfig, fileSystem);
-    expect(resolved?.fileUrl).toBe(expectedUrl);
-    // Get the mock file for the resolved file
-    const mfsFile = mfs[fileURLToPath(resolved.fileUrl)];
-    if (mfsFile.type !== "TsFile") {
-      throw new Error("Resolved typescript file not found in mock file system.");
-    }
-    importsStack.push(
-      ...mfsFile.imports.map((imp) => [resolved.fileUrl, imp.unresolved, pathToFileURL(imp.resolved).href] as const)
-    );
-  }
+test("Resolve all", () => {
+  // runTest({
+  //   entryTsConfig,
+  //   unsresolvedEntryTsFilePath: "./packages/server/src/server.ts",
+  //   resolvedFileUrl: "file:///root/packages/server/src/server.ts",
+  //   mfs,
+  //   cwd,
+  // });
+  runTest(case1);
 });
