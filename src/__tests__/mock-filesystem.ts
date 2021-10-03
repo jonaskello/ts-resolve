@@ -5,11 +5,11 @@ export type MockFilesystem = {
   readonly [path: string]: Entry;
 };
 
-export type Entry = JsonFileEntry | TsFileEntry | LinkEntry;
+export type Entry = JsonFile | TsFile | Symlink;
 
-export type JsonFileEntry = { type: "JsonFileEntry"; json: object };
-export type TsFileEntry = { type: "TsFileEntry"; imports: ReadonlyArray<string> };
-export type LinkEntry = { type: "LinkEntry"; realPath: string };
+export type JsonFile = { type: "JsonFile"; json: object };
+export type TsFile = { type: "TsFile"; imports: ReadonlyArray<string> };
+export type Symlink = { type: "Symlink"; realPath: string };
 
 export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
   return {
@@ -39,7 +39,7 @@ const getRealPath =
   (path: string): string | undefined => {
     // Check if the start of path matches a symlink path and if so resolve that part and try again
     for (const [k, v] of Object.entries(mfs)) {
-      if (v.type === "LinkEntry") {
+      if (v.type === "Symlink") {
         const realPath = v.realPath;
         if (path.startsWith(k)) {
           // Replace the matching start of path with the realpath
@@ -58,7 +58,7 @@ const readFile = (mfs: MockFilesystem) => (path: string) => {
   const realPath = getRealPath(mfs)(path);
   let result: string = undefined;
   const entry = mfs[realPath];
-  if (entry !== undefined && entry.type === "JsonFileEntry") {
+  if (entry !== undefined && entry.type === "JsonFile") {
     result = JSON.stringify(entry.json);
   }
   return result;
@@ -73,5 +73,5 @@ function pathExists(mfs: MockFilesystem, path: string): boolean {
 
 function isFileEntry(entry: Entry | undefined): boolean {
   if (entry === undefined) return false;
-  return entry.type === "JsonFileEntry" || entry.type === "TsFileEntry";
+  return entry.type === "JsonFile" || entry.type === "TsFile";
 }

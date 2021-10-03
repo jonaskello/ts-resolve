@@ -4,7 +4,7 @@ import { MockFilesystem, createFilesystem } from "./mock-filesystem";
 const mfs: MockFilesystem = {
   // server
   "/root/packages/server/package.json": {
-    type: "JsonFileEntry",
+    type: "JsonFile",
     json: {
       name: "@app/server",
       version: "1.0.0",
@@ -13,7 +13,7 @@ const mfs: MockFilesystem = {
     },
   },
   "/root/packages/server/tsconfig.json": {
-    type: "JsonFileEntry",
+    type: "JsonFile",
     json: {
       compilerOptions: {
         outDir: "lib",
@@ -22,11 +22,11 @@ const mfs: MockFilesystem = {
       references: [{ path: "../shared" }],
     },
   },
-  "/root/packages/server/src/server.ts": { type: "TsFileEntry", imports: ["./start-server"] },
-  "/root/packages/server/src/start-server.ts": { type: "TsFileEntry", imports: ["@app/shared"] },
+  "/root/packages/server/src/server.ts": { type: "TsFile", imports: ["./start-server"] },
+  "/root/packages/server/src/start-server.ts": { type: "TsFile", imports: ["@app/shared"] },
   // shared
   "/root/packages/shared/package.json": {
-    type: "JsonFileEntry",
+    type: "JsonFile",
     json: {
       name: "@app/shared",
       version: "1.0.0",
@@ -35,7 +35,7 @@ const mfs: MockFilesystem = {
     },
   },
   "/root/packages/shared/tsconfig.json": {
-    type: "JsonFileEntry",
+    type: "JsonFile",
     json: {
       compilerOptions: {
         outDir: "lib",
@@ -43,10 +43,10 @@ const mfs: MockFilesystem = {
       },
     },
   },
-  "/root/packages/shared/src/index.ts": { type: "TsFileEntry", imports: [] },
+  "/root/packages/shared/src/index.ts": { type: "TsFile", imports: [] },
   // node_modules
-  "/root/node_modules/@app/server": { type: "LinkEntry", realPath: "/root/packages/server" },
-  "/root/node_modules/@app/shared": { type: "LinkEntry", realPath: "/root/packages/shared" },
+  "/root/node_modules/@app/server": { type: "Symlink", realPath: "/root/packages/server" },
+  "/root/node_modules/@app/shared": { type: "Symlink", realPath: "/root/packages/shared" },
 };
 
 const fileSystem = createFilesystem(mfs, "/root");
