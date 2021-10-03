@@ -826,12 +826,11 @@ function createErrorCtor(errorMessageCreator) {
 // EXPORTS
 
 export {
-  getConditionsSet,
   getPackageConfig,
   getPackageScopeConfig,
+  getConditionsSet,
   shouldBeTreatedAsRelativeOrAbsolutePath,
   packageImportsResolve,
   packageExportsResolve,
   parsePackageName,
-  // getPackageType,
 };
