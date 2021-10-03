@@ -74,7 +74,7 @@ test("Relative resolve", () => {
   expect(resolved?.fileUrl).toBe("file:///root/packages/server/src/start-server.ts");
 });
 
-test.only("Bare specifier, link to package referenced in tsconfig", () => {
+test("Bare specifier, link to package referenced in tsconfig", () => {
   const resolved = tsResolve(
     "@app/shared",
     { conditions: [], parentURL: "file:///root/packages/server/src/start-server.ts" },

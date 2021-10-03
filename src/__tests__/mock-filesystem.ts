@@ -66,24 +66,14 @@ function pathExists(mfs: MockFilesystem, path: string): boolean {
 const isDirectory =
   (mfs: MockFilesystem) =>
   (path: string): boolean => {
-    let result = false;
-    for (let [entryPath, entry] of Object.entries(mfs)) {
-      if (entry.type === "LinkEntry") {
-        // In reality, not all links are dirs, but for our purpose they can always be
-        if (entryPath.startsWith(path)) {
-          result = true;
-        }
-        // result = isDirectory(mfs, cwd)(entry.realPath);
-      }
-      if (isFileEntry(entry)) {
-        const dir = dirname(entryPath);
-        if (dir.startsWith(path)) {
-          result = true;
-        }
-      }
+    const realPath = getRealPath(mfs)(path);
+    // Check if it is a file
+    const exactMatch = mfs[realPath];
+    if (isFileEntry(exactMatch)) {
+      return false;
     }
-    // console.log("MOCK: isDirectory", path, result);
-    return result;
+    // If the realpath exists but is not a file, then it is a dir
+    return pathExists(mfs, path);
   };
 
 function isFileEntry(entry: Entry | undefined): boolean {
