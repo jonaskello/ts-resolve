@@ -33,7 +33,7 @@ export type ResolveReturn = {
 export function tsResolve(
   specifier: string,
   context: ResolveContext,
-  tsConfigPathIn?: string | undefined,
+  entryTsConfig: string,
   fileSystemIn?: FileSystem | undefined
 ): ResolveReturn | undefined {
   // Let node handle `data:` and `node:` prefix etc.
@@ -42,30 +42,16 @@ export function tsResolve(
     return undefined;
   }
 
-  // Fallback for entry tsconfig.json
-  const entryTsConfig = tsConfigPathIn ?? process.env["TS_NODE_PROJECT"];
-  if (entryTsConfig === undefined || entryTsConfig === null || entryTsConfig === "") {
-    throw new Error("Entry tsconfig file must be passed or present in TS_NODE_PROJECT.");
-  }
-
   // Fallback to default filesystem
   const filesystem = fileSystemIn ?? createDefaultFilesystem();
 
   console.log("RESOLVE: START");
 
-  // parentURL is the URL returned by previous resolve, so it is not the specifier that did the import but the resolved specifier
-  // If a ./foo.ts file was resolved for
-  // import xxxx from "./foo.js"
-  // Then ./foo.ts file will be the parentURL, not foo.js
-  // This means abs/relative imports never need mapping of path from output to input
   let { parentURL: parentURLIn, conditions } = context;
 
   // If parentURL was not specified, then we use cwd
-  const parentURL = parentURLIn ?? filesystem?.cwd() ?? process.cwd();
+  const parentURL = parentURLIn ?? filesystem.cwd();
   console.log("RESOLVE: parentURL", parentURL);
-
-  // Get tsconfig info (it can be cached)
-  const tsConfigInfo = getTsConfigInfo(filesystem, entryTsConfig);
 
   // If file explicitly ends in .ts then just return it
   // This can only happen for the entry file as typescript does not allow
@@ -82,6 +68,9 @@ export function tsResolve(
     const url = pathToFileURL(absFilePath);
     return { fileUrl: url.href, tsConfigUrl: "EntryPoint" };
   }
+
+  // Get tsconfig info (it can be cached)
+  const tsConfigInfo = getTsConfigInfo(filesystem, entryTsConfig);
 
   // Try to resolve to a typescript file, returns undefined if it could not be resolved
   const conditionsSet = getConditionsSet(conditions);
@@ -108,21 +97,13 @@ function tsModuleResolve(
   if (shouldBeTreatedAsRelativeOrAbsolutePath(specifier)) {
     console.log("tsModuleResolve: resolveFilePath", specifier, base);
     const resolved = new URL(specifier, base);
-    // console.log("myModuleResolve: tsConfigInfo", tsConfigInfo);
-    // const tsConfigAbsPath = getTsConfigAbsPathForOutFile(
-    //   tsConfigInfo,
-    //   resolved
-    // );
-    // console.log("myModuleResolve: tsConfigAbsPath", tsConfigAbsPath);
-    // if (tsConfigAbsPath) {
-    //   // If the file was in the output space of a tsconfig, then just
-    //   // probe for file-ext as there can be no path-mapping for abs/rel paths
-    //   const tsFile = probeForTsExtFile(resolved);
-    //   console.log("myModuleResolve: tsFile", tsFile);
-    //   if (tsFile !== undefined) {
-    //     return [new URL(tsFile), tsConfigAbsPath];
-    //   }
-    // }
+
+    // parentURL is the URL returned by previous resolve, so it is always a fully resolved specifier
+    // If a ./foo.ts file was resolved for
+    // import xxxx from "./foo.js"
+    // Then ./foo.ts file will be the parentURL, not foo.js
+    // This means abs/relative imports never need mapping of path from output to input
+
     console.log("myModuleResolve: resolved", resolved.href);
 
     const tsFileUrl = probeForTsFileInSamePathAsJsFile(resolved, filesystem.isFile);

@@ -13,7 +13,11 @@ import { tsResolve } from "../../lib/ts-resolve.js";
  *   url {string} The absolute url to the import target (such as file://…)
  */
 export function resolve(specifier, context, defaultResolve) {
-  const resolved = tsResolve(specifier, context);
+  const entryTsConfig = process.env["TS_NODE_PROJECT"];
+  if (entryTsConfig === undefined || entryTsConfig === null || entryTsConfig === "") {
+    throw new Error("Entry tsconfig file must be passed or present in TS_NODE_PROJECT.");
+  }
+  const resolved = tsResolve(specifier, context, entryTsConfig);
   if (resolved !== undefined) {
     const { fileUrl, tsConfigUrl } = resolved;
     return { url: fileUrl, format: tsConfigUrl };
@@ -38,11 +42,7 @@ export async function load(url, context, defaultLoad) {
   if (isTypescriptFile(url)) {
     // Call defaultLoad to get the source
     const format = getTypescriptModuleFormat();
-    const { source: rawSource } = await defaultLoad(
-      url,
-      { format },
-      defaultLoad
-    );
+    const { source: rawSource } = await defaultLoad(url, { format }, defaultLoad);
     const source = transpileTypescript(url, rawSource, "esm");
     return { format, source };
   }
