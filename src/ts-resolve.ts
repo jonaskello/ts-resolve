@@ -10,7 +10,7 @@ import {
   getConditionsSet,
   packageImportsResolve,
   packageExportsResolve,
-} from "./resolve_utils";
+} from "./resolve-utils";
 import { createDefaultFilesystem, IsFile, FileSystem, GetRealpath, IsDirectory, ReadFile } from "./filesystem";
 
 type TsConfigInfo = {
