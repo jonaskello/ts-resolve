@@ -1,10 +1,6 @@
 // Extracted from this file: https://github.com/nodejs/node/blob/master/lib/internal/modules/esm/resolve.js
 
-import { readFile } from "fs";
-
 // "use strict";
-
-export const foo = 42;
 
 const { URL, pathToFileURL, fileURLToPath } = require("url");
 const {
