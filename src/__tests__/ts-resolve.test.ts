@@ -6,20 +6,12 @@ const mfs: MockFilesystem = {
   // server
   "/root/packages/server/package.json": {
     type: "JsonFile",
-    json: {
-      name: "@app/server",
-      version: "1.0.0",
-      main: "index.js",
-      type: "module",
-    },
+    json: { name: "@app/server", version: "1.0.0", main: "index.js", type: "module" },
   },
   "/root/packages/server/tsconfig.json": {
     type: "JsonFile",
     json: {
-      compilerOptions: {
-        outDir: "lib",
-        rootDir: "src",
-      },
+      compilerOptions: { outDir: "lib", rootDir: "src" },
       references: [{ path: "../shared" }],
     },
   },
@@ -34,21 +26,11 @@ const mfs: MockFilesystem = {
   // shared
   "/root/packages/shared/package.json": {
     type: "JsonFile",
-    json: {
-      name: "@app/shared",
-      version: "1.0.0",
-      main: "lib/index.js",
-      type: "module",
-    },
+    json: { name: "@app/shared", version: "1.0.0", main: "lib/index.js", type: "module" },
   },
   "/root/packages/shared/tsconfig.json": {
     type: "JsonFile",
-    json: {
-      compilerOptions: {
-        outDir: "lib",
-        rootDir: "src",
-      },
-    },
+    json: { compilerOptions: { outDir: "lib", rootDir: "src" } },
   },
   "/root/packages/shared/src/index.ts": { type: "TsFile", imports: [] },
   // node_modules
