@@ -4,6 +4,6 @@ module.exports = {
   testEnvironment: "node",
   testMatch: ["**/src/**/?(*.)+(spec|test).[jt]s?(x)"],
   collectCoverage: false, // we use --coverage in the script instead
-  collectCoverageFrom: ["src/**/*.ts"],
+  collectCoverageFrom: ["src/**/*.ts", "!src/**/__tests__/**/*"],
   coverageReporters: ["text-summary", "lcov"],
 };
