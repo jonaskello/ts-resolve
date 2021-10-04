@@ -4,6 +4,10 @@ module.exports = {
     project: "./tsconfig.json",
   },
   rules: {
-    "eslint@typescript-eslint/consistent-type-imports": "off",
+    "@typescript-eslint/consistent-type-imports": "off",
+    "@typescript-eslint/no-unnecessary-condition": "off",
+    "@typescript-eslint/prefer-readonly-parameter-types": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
   },
 };

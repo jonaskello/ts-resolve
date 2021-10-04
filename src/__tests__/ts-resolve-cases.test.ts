@@ -1,5 +1,5 @@
 import { fileURLToPath, pathToFileURL } from "url";
-import { ResolveReturn, tsResolve } from "../ts-resolve";
+import { tsResolve } from "../ts-resolve";
 import { clearCache } from "../tsconfig-info";
 import { createFilesystem } from "./mock-filesystem";
 import { ResolveTest } from "./resolve-test";
@@ -21,7 +21,8 @@ onlySkip(tests).forEach((item) => {
     while (importsStack.length > 0) {
       const [parentURL, unresolvedUrl, expectedUrl] = importsStack.pop()!;
       const resolved = tsResolve(unresolvedUrl, { conditions: [], parentURL }, entryTsConfig, fileSystem);
-      test(`Resolve ${unresolvedUrl} (${parentURL && fileURLToPath(parentURL)})`, () => {
+      // eslint-disable-next-line @typescript-eslint/no-loop-func
+      test(`Resolve ${unresolvedUrl} (${(parentURL && fileURLToPath(parentURL)) ?? "undefined"})`, () => {
         // Assert resolved url
         expect(resolved?.fileUrl).toBe(expectedUrl);
       });

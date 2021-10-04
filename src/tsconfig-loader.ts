@@ -48,7 +48,7 @@ export function loadTsconfig(
         extendedConfigPath = path.join(currentDir, "node_modules", extendedConfig);
       }
 
-      const base = loadTsconfig(extendedConfigPath, existsSync, readFileSync) || {};
+      const base = loadTsconfig(extendedConfigPath, existsSync, readFileSync) ?? {};
 
       // baseUrl should be interpreted as relative to the base tsconfig,
       // but we need to update it so it is relative to the original tsconfig being loaded

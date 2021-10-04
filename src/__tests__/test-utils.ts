@@ -1,14 +1,14 @@
-import * as fs from "fs";
+// import * as fs from "fs";
 
-export function loadTests<T>(testsPath: string): ReadonlyArray<T> {
-  const importedTests = fs
-    .readdirSync(testsPath)
-    // .filter(f => f.match(/\.test\.ts$/i))
-    .map((f) => require(testsPath + f))
-    .map((importedModule) => importedModule.test as T);
+// export function loadTests<T>(testsPath: string): ReadonlyArray<T> {
+//   const importedTests = fs
+//     .readdirSync(testsPath)
+//     // .filter(f => f.match(/\.test\.ts$/i))
+//     .map((f) => require(testsPath + f))
+//     .map((importedModule) => importedModule.test as T);
 
-  return importedTests;
-}
+//   return importedTests;
+// }
 
 export type UtilsTest = {
   readonly only?: boolean;

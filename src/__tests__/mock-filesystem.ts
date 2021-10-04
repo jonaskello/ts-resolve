@@ -73,12 +73,16 @@ const readFile = (mfs: MockFilesystem) => (path: string) => {
 
 function pathExists(mfs: MockFilesystem, path: string): boolean {
   for (const key of Object.keys(mfs)) {
-    if (key.startsWith(path)) return true;
+    if (key.startsWith(path)) {
+      return true;
+    }
   }
   return false;
 }
 
 function isFileEntry(entry: Entry | undefined): boolean {
-  if (entry === undefined) return false;
+  if (entry === undefined) {
+    return false;
+  }
   return entry.type === "JsonFile" || entry.type === "TsFile";
 }

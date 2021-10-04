@@ -48,7 +48,7 @@ export function tsResolve(
 
   debug("RESOLVE: START");
 
-  let { parentURL: parentURLIn, conditions } = context;
+  const { parentURL: parentURLIn, conditions } = context;
 
   // If parentURL was not specified, then we use cwd
   const parentURL = parentURLIn ?? filesystem.cwd();
@@ -88,7 +88,7 @@ export function tsResolve(
 function tsModuleResolve(
   specifier: string,
   base: string | undefined,
-  conditions: Set<string>,
+  conditions: ReadonlySet<string>,
   tsConfigInfo: TsConfigInfo,
   filesystem: FileSystem
 ): ResolveReturn | undefined {
@@ -118,8 +118,8 @@ function tsModuleResolve(
   }
 
   // Resolve bare specifiers
-  let possibleUrls: ReadonlyArray<URL>;
-  if (specifier[0] === "#") {
+  let possibleUrls: ReadonlyArray<URL> = [];
+  if (specifier.startsWith("#")) {
     debug("myModuleResolve: packageImportsResolve");
     const { resolved } = packageImportsResolve(packageResolve, specifier, base, conditions, filesystem.readFile)!;
     possibleUrls = [resolved];
@@ -170,7 +170,7 @@ function tsModuleResolve(
 function convertTypescriptOutUrlToSourceLocation(
   tsConfigInfo: TsConfigInfo,
   outFileUrl: URL
-): { fileUrl: URL; tsConfigAbsPath: string } | undefined {
+): { readonly fileUrl: URL; readonly tsConfigAbsPath: string } | undefined {
   const outFilePath = fileURLToPath(outFileUrl);
   let absOutDir: string | undefined = undefined;
   let tsConfigAbsPath: string | undefined = undefined;
@@ -212,7 +212,7 @@ function realPathOfSymlinkedUrl(inputUrl: URL, getRealPath: GetRealpath): URL {
   debug("realPathOfSymlinkedUrl--START", pathString);
   const pathParts = pathString.substr(1).split(path.sep);
   let existingRealPath = "/";
-  let i: number;
+  let i: number = 0;
   for (i = 0; i < pathParts.length; i++) {
     const pp = pathParts[i];
     const checkPath = path.join(existingRealPath, pp);
@@ -243,6 +243,7 @@ function probeForTsFileInSamePathAsJsFile(jsFileUrl: URL, isFile: IsFile): URL |
   if (isFile(extensionless + ".tsx")) {
     return pathToFileURL(extensionless + ".tsx");
   }
+  return undefined;
 }
 
 /**
@@ -255,7 +256,8 @@ function probeForTsFileInSamePathAsJsFile(jsFileUrl: URL, isFile: IsFile): URL |
 function packageResolve(
   specifier: string,
   base: string | URL | undefined,
-  conditions: Set<string>,
+  // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
+  conditions: ReadonlySet<string>,
   isDirectory: IsDirectory,
   readFile: ReadFile
 ): ReadonlyArray<URL> {
@@ -265,7 +267,9 @@ function packageResolve(
   // ResolveSelf
   // Check if the specifier resolves to the same package we are resolving from
   const selfResolved = resolveSelf(packageResolve, base, packageName, packageSubpath, conditions, readFile);
-  if (selfResolved) return [selfResolved];
+  if (selfResolved) {
+    return [selfResolved];
+  }
 
   // Find package.json by ascending the file system
   const packageJsonMatch = findPackageJson(packageName, base, isScoped, isDirectory);
@@ -286,9 +290,10 @@ function packageResolve(
       return [per];
     }
     debug("packageSubpath", packageSubpath);
-    if (packageSubpath === ".")
+    if (packageSubpath === ".") {
       // return legacyMainResolve(packageJSONUrl, packageConfig, base);
       return legacyMainResolve2(packageJSONUrl, packageConfig);
+    }
     return [new URL(packageSubpath, packageJSONUrl)];
   }
 
@@ -298,7 +303,6 @@ function packageResolve(
   return [];
 }
 
-function isTypescriptFile(url: string) {
-  const extensionsRegex = /\.ts$/;
-  return extensionsRegex.test(url);
+function isTypescriptFile(url: string): boolean {
+  return url.endsWith(".ts") || url.endsWith(".tsx");
 }

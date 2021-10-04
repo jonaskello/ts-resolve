@@ -21,7 +21,7 @@ export function createDefaultFilesystem(): FileSystem {
     getRealpath: (path: string) => {
       try {
         return fs.realpathSync(path);
-      } catch (e) {
+      } catch (e: unknown) {
         return undefined;
       }
     },
