@@ -1,5 +1,12 @@
 # ts-esm-resolve
 
+[![build][build-image]][build-url]
+[![Coverage Status][codecov-image]][codecov-url]
+[![code style: prettier][prettier-image]][prettier-url]
+[![types][types-image]][types-url]
+[![npm version][npm-image]][npm-url]
+[![MIT license][license-image]][license-url]
+
 Resolve typescript ES modules
 
 ## Overview
@@ -97,3 +104,16 @@ Then you can use it like this:
 ```bash
 node --loader loader.mjs myfile.ts
 ```
+
+[build-image]: https://github.com/jonaskello/ts-esm-resolve/workflows/Build/badge.svg
+[build-url]: https://github.com/jonaskello/ts-esm-resolve/actions?query=workflow%3ABuild+branch%3Amaster
+[codecov-image]: https://codecov.io/gh/jonaskello/ts-esm-resolve/branch/master/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/jonaskello/ts-esm-resolve
+[prettier-image]: https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat
+[prettier-url]: https://github.com/prettier/prettier
+[types-image]: https://img.shields.io/npm/types/scrub-js.svg
+[types-url]: https://www.typescriptlang.org/
+[license-image]: https://img.shields.io/github/license/jonaskello/ts-esm-resolve.svg?style=flat
+[license-url]: https://opensource.org/licenses/MIT
+[npm-image]: https://img.shields.io/npm/v/ts-esm-resolve.svg?style=flat
+[npm-url]: https://www.npmjs.com/package/ts-esm-resolve
