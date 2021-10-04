@@ -43,6 +43,9 @@
     "prepare": "husky install"
   },
   "lint-staged": {
-    "*.{js,css,md}": "prettier --write"
+    "*.{ts,tsx}": "eslint -f visualstudio",
+    "*.{ts,tsx,js,json,css,md}": [
+      "prettier --write"
+    ]
   }
 }
