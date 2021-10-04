@@ -6,7 +6,6 @@
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat)](https://github.com/prettier/prettier)
 [![types](https://img.shields.io/npm/types/scrub-js.svg)](https://www.typescriptlang.org/)
 [![MIT license](https://img.shields.io/github/license/jonaskello/ts-esm-resolve.svg?style=flat)](https://opensource.org/licenses/MIT)
-[![GitHub Discussions](https://img.shields.io/github/discussions/jonaskello/ts-esm-resolve)](https://github.com/jonaskello/ts-esm-resolve/discussions)
 
 Resolve typescript ES modules
 
