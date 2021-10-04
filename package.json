@@ -10,6 +10,7 @@
     "url": "git+https://github.com/jonaskello/ts-esm-resolve.git"
   },
   "keywords": [
+    "typescript",
     "esm",
     "resolve",
     "modules"
