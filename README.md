@@ -1,11 +1,12 @@
 # ts-esm-resolve
 
-[![build][build-image]][build-url]
-[![Coverage Status][codecov-image]][codecov-url]
-[![code style: prettier][prettier-image]][prettier-url]
-[![types][types-image]][types-url]
-[![npm version][npm-image]][npm-url]
-[![MIT license][license-image]][license-url]
+[![npm version](https://img.shields.io/npm/v/ts-esm-resolve.svg?style=flat)](https://www.npmjs.com/package/ts-esm-resolve)
+[![CI](https://github.com/jonaskello/ts-esm-resolve/actions/workflows/ci.yml/badge.svg)](https://github.com/jonaskello/ts-esm-resolve/actions/workflows/ci.yml)
+[![Coverage Status](https://codecov.io/gh/jonaskello/ts-esm-resolve/branch/master/graph/badge.svg)](https://codecov.io/gh/jonaskello/ts-esm-resolve)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat)](https://github.com/prettier/prettier)
+[![types](https://img.shields.io/npm/types/scrub-js.svg)](https://www.typescriptlang.org/)
+[![MIT license](https://img.shields.io/github/license/jonaskello/ts-esm-resolve.svg?style=flat)](https://opensource.org/licenses/MIT)
+[![GitHub Discussions](https://img.shields.io/github/discussions/jonaskello/ts-esm-resolve)](https://github.com/jonaskello/ts-esm-resolve/discussions)
 
 Resolve typescript ES modules
 
@@ -104,16 +105,3 @@ Then you can use it like this:
 ```bash
 node --loader loader.mjs myfile.ts
 ```
-
-[build-image]: https://github.com/jonaskello/ts-esm-resolve/workflows/Build/badge.svg
-[build-url]: https://github.com/jonaskello/ts-esm-resolve/actions?query=workflow%3ABuild+branch%3Amaster
-[codecov-image]: https://codecov.io/gh/jonaskello/ts-esm-resolve/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/jonaskello/ts-esm-resolve
-[prettier-image]: https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat
-[prettier-url]: https://github.com/prettier/prettier
-[types-image]: https://img.shields.io/npm/types/scrub-js.svg
-[types-url]: https://www.typescriptlang.org/
-[license-image]: https://img.shields.io/github/license/jonaskello/ts-esm-resolve.svg?style=flat
-[license-url]: https://opensource.org/licenses/MIT
-[npm-image]: https://img.shields.io/npm/v/ts-esm-resolve.svg?style=flat
-[npm-url]: https://www.npmjs.com/package/ts-esm-resolve
