@@ -6,9 +6,10 @@ import { IsFile, IsDirectory, ReadFile, FileSystem } from "./filesystem";
 const debug = debugCreator("tsconfig-info");
 
 export type TsConfigInfo = {
-  tsconfigMap: Map<string, Tsconfig>;
-  absOutDirToTsConfig: Map<string, string>;
+  readonly tsconfigMap: ReadonlyMap<string, Tsconfig>;
+  readonly absOutDirToTsConfig: ReadonlyMap<string, string>;
 };
+// eslint-disable-next-line functional/no-let,functional/prefer-readonly-type
 let entryTsConfigInfoCache: Map<string, TsConfigInfo> = new Map();
 
 export function clearCache(): void {
@@ -58,7 +59,7 @@ export function loadTsConfigAndResolveReferences(
   isDirectory: IsDirectory,
   isFile: IsFile,
   readFile: ReadFile
-): Map<string, Tsconfig> {
+): ReadonlyMap<string, Tsconfig> {
   const tsconfigMap = new Map();
   debug(`entryTsConfig = '${entryTsConfig}'`);
   loadTsConfigAndResolveReferencesRecursive(cwd, [{ path: entryTsConfig }], tsconfigMap, isDirectory, isFile, readFile);
@@ -67,12 +68,13 @@ export function loadTsConfigAndResolveReferences(
 
 function loadTsConfigAndResolveReferencesRecursive(
   cwd: string,
-  refs: Array<{ path: string }>,
+  refs: ReadonlyArray<{ readonly path: string }>,
+  // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types,functional/prefer-readonly-type
   tsconfigMap: Map<string, Tsconfig>,
   isDirectory: IsDirectory,
   isFile: IsFile,
   readFile: ReadFile
-): Map<string, Tsconfig> {
+): ReadonlyMap<string, Tsconfig> {
   for (const ref of refs) {
     debug("resolveConfigPath", cwd, ref.path);
     let fullPath = path.join(cwd, ref.path);
@@ -86,7 +88,7 @@ function loadTsConfigAndResolveReferencesRecursive(
     tsconfigMap.set(fullPath, tsconfig);
     loadTsConfigAndResolveReferencesRecursive(
       path.dirname(fullPath),
-      tsconfig?.references ?? [],
+      tsconfig.references ?? [],
       tsconfigMap,
       isDirectory,
       isFile,

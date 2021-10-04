@@ -1,24 +1,23 @@
 import * as path from "path";
-// tslint:disable:no-require-imports
-import JSON5 = require("json5");
-import StripBom = require("strip-bom");
-// tslint:enable:no-require-imports
+import JSON5 from "json5";
+import StripBom from "strip-bom";
 
 /**
  * Typing for the parts of tsconfig that we care about
  */
 export interface Tsconfig {
-  extends?: string;
-  references?: Array<{ path: string }>;
-  include?: Array<string>;
-  exclude?: Array<string>;
-  files?: Array<string>;
-  compilerOptions?: {
-    rootDir?: string;
-    outDir?: string;
+  readonly extends?: string;
+  readonly references?: ReadonlyArray<{ readonly path: string }>;
+  readonly include?: ReadonlyArray<string>;
+  readonly exclude?: ReadonlyArray<string>;
+  readonly files?: ReadonlyArray<string>;
+  readonly compilerOptions?: {
+    readonly rootDir?: string;
+    readonly outDir?: string;
+    // eslint-disable-next-line functional/prefer-readonly-type
     baseUrl?: string;
-    paths?: { [key: string]: Array<string> };
-    strict?: boolean;
+    readonly paths?: { readonly [key: string]: ReadonlyArray<string> };
+    readonly strict?: boolean;
   };
 }
 
@@ -53,7 +52,7 @@ export function loadTsconfig(
 
       // baseUrl should be interpreted as relative to the base tsconfig,
       // but we need to update it so it is relative to the original tsconfig being loaded
-      if (base.compilerOptions && base.compilerOptions.baseUrl) {
+      if (base.compilerOptions?.baseUrl) {
         const extendsDir = path.dirname(extendedConfig);
         base.compilerOptions.baseUrl = path.join(extendsDir, base.compilerOptions.baseUrl);
       }
@@ -68,7 +67,7 @@ export function loadTsconfig(
       };
     }
     return config;
-  } catch (e) {
+  } catch (e: unknown) {
     console.error(`Error while trying to load tsconfig file ${configFilePath}.`);
     throw e;
   }

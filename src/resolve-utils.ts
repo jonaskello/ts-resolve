@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 // Extracted from this file: https://github.com/nodejs/node/blob/master/lib/internal/modules/esm/resolve.js
 

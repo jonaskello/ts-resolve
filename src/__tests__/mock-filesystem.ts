@@ -6,9 +6,13 @@ export type MockFilesystem = {
 
 export type Entry = JsonFile | TsFile | Symlink;
 
-export type JsonFile = { type: "JsonFile"; json: object };
-export type TsFile = { type: "TsFile"; imports: ReadonlyArray<{ unresolved: string; resolved: string }> };
-export type Symlink = { type: "Symlink"; realPath: string };
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type JsonFile = { readonly type: "JsonFile"; readonly json: object };
+export type TsFile = {
+  readonly type: "TsFile";
+  readonly imports: ReadonlyArray<{ readonly unresolved: string; readonly resolved: string }>;
+};
+export type Symlink = { readonly type: "Symlink"; readonly realPath: string };
 
 export function createFilesystem(mfs: MockFilesystem, cwd: string): FileSystem {
   return {

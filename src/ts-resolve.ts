@@ -283,7 +283,7 @@ function packageResolve(
         base,
         conditions
       ).resolved;
-      return per ? [per] : [];
+      return [per];
     }
     debug("packageSubpath", packageSubpath);
     if (packageSubpath === ".")
