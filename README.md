@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/ts-esm-resolve.svg?style=flat)](https://www.npmjs.com/package/ts-esm-resolve)
 [![CI](https://github.com/jonaskello/ts-esm-resolve/actions/workflows/ci.yml/badge.svg)](https://github.com/jonaskello/ts-esm-resolve/actions/workflows/ci.yml)
-[![Coverage Status](https://codecov.io/gh/jonaskello/ts-esm-resolve/branch/master/graph/badge.svg)](https://codecov.io/gh/jonaskello/ts-esm-resolve)
+[![Coverage Status](https://codecov.io/gh/jonaskello/ts-esm-resolve/branch/main/graph/badge.svg)](https://codecov.io/gh/jonaskello/ts-esm-resolve)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat)](https://github.com/prettier/prettier)
 [![types](https://img.shields.io/npm/types/scrub-js.svg)](https://www.typescriptlang.org/)
 [![MIT license](https://img.shields.io/github/license/jonaskello/ts-esm-resolve.svg?style=flat)](https://opensource.org/licenses/MIT)
