@@ -1,6 +1,9 @@
 import path from "path";
+import debugCreator from "debug";
 import { loadTsconfig, Tsconfig } from "./tsconfig-loader";
 import { IsFile, IsDirectory, ReadFile, FileSystem } from "./filesystem";
+
+const debug = debugCreator("tsconfig-info");
 
 export type TsConfigInfo = {
   tsconfigMap: Map<string, Tsconfig>;
@@ -57,7 +60,7 @@ export function loadTsConfigAndResolveReferences(
   readFile: ReadFile
 ): Map<string, Tsconfig> {
   const tsconfigMap = new Map();
-  console.log(`entryTsConfig = '${entryTsConfig}'`);
+  debug(`entryTsConfig = '${entryTsConfig}'`);
   loadTsConfigAndResolveReferencesRecursive(cwd, [{ path: entryTsConfig }], tsconfigMap, isDirectory, isFile, readFile);
   return tsconfigMap;
 }
@@ -71,7 +74,7 @@ function loadTsConfigAndResolveReferencesRecursive(
   readFile: ReadFile
 ): Map<string, Tsconfig> {
   for (const ref of refs) {
-    console.log("resolveConfigPath", cwd, ref.path);
+    debug("resolveConfigPath", cwd, ref.path);
     let fullPath = path.join(cwd, ref.path);
     if (isDirectory(fullPath)) {
       fullPath = path.join(fullPath, "tsconfig.json");

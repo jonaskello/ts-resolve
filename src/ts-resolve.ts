@@ -1,7 +1,6 @@
 import { URL, pathToFileURL, fileURLToPath } from "url";
 import path from "path";
-import { loadTsconfig, Tsconfig } from "./tsconfig-loader";
-
+import debugCreator from "debug";
 import {
   getPackageConfig, // getPackageConfig does filesystem access
   shouldBeTreatedAsRelativeOrAbsolutePath,
@@ -14,7 +13,9 @@ import {
   legacyMainResolve2,
 } from "./resolve-utils";
 import { createDefaultFilesystem, IsFile, FileSystem, GetRealpath, IsDirectory, ReadFile } from "./filesystem";
-import { buildTsConfigInfo, getTsConfigInfo, TsConfigInfo } from "./tsconfig-info";
+import { getTsConfigInfo, TsConfigInfo } from "./tsconfig-info";
+
+const debug = debugCreator("ts-resolve");
 
 export type ResolveContext = {
   readonly conditions: ReadonlyArray<string>;
@@ -45,13 +46,13 @@ export function tsResolve(
   // Fallback to default filesystem
   const filesystem = fileSystemIn ?? createDefaultFilesystem();
 
-  console.log("RESOLVE: START");
+  debug("RESOLVE: START");
 
   let { parentURL: parentURLIn, conditions } = context;
 
   // If parentURL was not specified, then we use cwd
   const parentURL = parentURLIn ?? filesystem.cwd();
-  console.log("RESOLVE: parentURL", parentURL);
+  debug("RESOLVE: parentURL", parentURL);
 
   // If file explicitly ends in .ts then just return it
   // This can only happen for the entry file as typescript does not allow
@@ -63,7 +64,7 @@ export function tsResolve(
         "Typescript files (*.ts/tsx) can only used as entry file, not be imported (this should never happen)."
       );
     }
-    console.log("specifier, parentURL", specifier, parentURL);
+    debug("specifier, parentURL", specifier, parentURL);
     const absFilePath = path.join(parentURL, specifier);
     const url = pathToFileURL(absFilePath);
     return { fileUrl: url.href, tsConfigUrl: "EntryPoint" };
@@ -91,11 +92,11 @@ function tsModuleResolve(
   tsConfigInfo: TsConfigInfo,
   filesystem: FileSystem
 ): ResolveReturn | undefined {
-  console.log("tsModuleResolve: START");
+  debug("tsModuleResolve: START");
 
   // Resolve path specifiers
   if (shouldBeTreatedAsRelativeOrAbsolutePath(specifier)) {
-    console.log("tsModuleResolve: resolveFilePath", specifier, base);
+    debug("tsModuleResolve: resolveFilePath", specifier, base);
     const resolved = new URL(specifier, base);
 
     // parentURL is the URL returned by previous resolve, so it is always a fully resolved specifier
@@ -104,7 +105,7 @@ function tsModuleResolve(
     // Then ./foo.ts file will be the parentURL, not foo.js
     // This means abs/relative imports never need mapping of path from output to input
 
-    console.log("myModuleResolve: resolved", resolved.href);
+    debug("myModuleResolve: resolved", resolved.href);
 
     const tsFileUrl = probeForTsFileInSamePathAsJsFile(resolved, filesystem.isFile);
     if (tsFileUrl !== undefined) {
@@ -119,24 +120,24 @@ function tsModuleResolve(
   // Resolve bare specifiers
   let possibleUrls: ReadonlyArray<URL>;
   if (specifier[0] === "#") {
-    console.log("myModuleResolve: packageImportsResolve");
+    debug("myModuleResolve: packageImportsResolve");
     const { resolved } = packageImportsResolve(packageResolve, specifier, base, conditions, filesystem.readFile)!;
     possibleUrls = [resolved];
   } else {
-    console.log("myModuleResolve: else");
+    debug("myModuleResolve: else");
     try {
       possibleUrls = [new URL(specifier)];
     } catch {
-      console.log("myModuleResolve: packageResolve");
+      debug("myModuleResolve: packageResolve");
       possibleUrls = packageResolve(specifier, base, conditions, filesystem.isDirectory, filesystem.readFile);
-      console.log("myModuleResolve: packageResolve RETURN", Array.isArray(possibleUrls));
+      debug("myModuleResolve: packageResolve RETURN", Array.isArray(possibleUrls));
     }
   }
-  console.log("myModuleResolve: END");
+  debug("myModuleResolve: END");
 
   // At this point the bare specifier is resolved to one or more possible JS files
   // Cannot be a .ts file since that case only exists for the entry file and is handled directly in resolve()
-  console.log("bare specifiier possibleUrls", possibleUrls.length);
+  debug("bare specifiier possibleUrls", possibleUrls.length);
   for (const possibleUrl of possibleUrls) {
     // Convert path (useful if the specifier was a reference to a package which is in the same composite project)
     // If the resolution resulted in a symlink then use the real path instead
@@ -147,7 +148,7 @@ function tsModuleResolve(
       //
       const tsFile = probeForTsFileInSamePathAsJsFile(fileUrl, filesystem.isFile);
       if (tsFile !== undefined) {
-        console.log("---------> RESOLVED BARE SPECIFIER: ", tsFile.href);
+        debug("---------> RESOLVED BARE SPECIFIER: ", tsFile.href);
         // finalizeResolution checks for old file endings if getOptionValue("--experimental-specifier-resolution") === "node"
         // const finalizedUrl = finalizeResolution(tsFile, base);
         const finalizedUrl = tsFile;
@@ -180,7 +181,7 @@ function convertTypescriptOutUrlToSourceLocation(
       tsConfigAbsPath = value;
       const tc = tsConfigInfo.tsconfigMap.get(tsConfigAbsPath);
       absRootDir = path.join(path.dirname(tsConfigAbsPath), tc?.compilerOptions?.rootDir ?? "");
-      console.log("-----> checking for root dir", absRootDir);
+      debug("-----> checking for root dir", absRootDir);
       break;
     }
   }
@@ -195,7 +196,7 @@ function convertTypescriptOutUrlToSourceLocation(
     }
     const remaining = outFilePath.substr(absOutDir.length);
     const convertedPath = path.join(absRootDir, remaining);
-    console.log("---->CONVERTED PATH", convertedPath);
+    debug("---->CONVERTED PATH", convertedPath);
     return { fileUrl: pathToFileURL(convertedPath), tsConfigAbsPath };
   }
   return undefined;
@@ -208,7 +209,7 @@ function convertTypescriptOutUrlToSourceLocation(
  */
 function realPathOfSymlinkedUrl(inputUrl: URL, getRealPath: GetRealpath): URL {
   const pathString = fileURLToPath(inputUrl);
-  console.log("realPathOfSymlinkedUrl--START", pathString);
+  debug("realPathOfSymlinkedUrl--START", pathString);
   const pathParts = pathString.substr(1).split(path.sep);
   let existingRealPath = "/";
   let i: number;
@@ -222,7 +223,7 @@ function realPathOfSymlinkedUrl(inputUrl: URL, getRealPath: GetRealpath): URL {
     existingRealPath = newRealpath;
   }
   const fullPath = path.join(existingRealPath, ...pathParts.slice(i));
-  console.log("realPathOfSymlinkedUrl--END", fullPath);
+  debug("realPathOfSymlinkedUrl--END", fullPath);
   return pathToFileURL(fullPath);
 }
 
@@ -284,7 +285,7 @@ function packageResolve(
       ).resolved;
       return per ? [per] : [];
     }
-    console.log("packageSubpath", packageSubpath);
+    debug("packageSubpath", packageSubpath);
     if (packageSubpath === ".")
       // return legacyMainResolve(packageJSONUrl, packageConfig, base);
       return legacyMainResolve2(packageJSONUrl, packageConfig);

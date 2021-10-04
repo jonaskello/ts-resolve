@@ -2,6 +2,8 @@
 // Extracted from this file: https://github.com/nodejs/node/blob/master/lib/internal/modules/esm/resolve.js
 
 // "use strict";
+import debugCreator from "debug";
+const debug = debugCreator("ts-resolve");
 
 const { pathToFileURL, fileURLToPath } = require("url");
 
@@ -896,7 +898,7 @@ function resolveSelf(packageResolve, base, packageName, packageSubpath, conditio
  * @returns {URL}
  */
 function legacyMainResolve2(packageJSONUrl: string | URL, packageConfig): ReadonlyArray<URL> {
-  console.log("legacyMainResolve2", packageJSONUrl, packageConfig);
+  debug("legacyMainResolve2", packageJSONUrl, packageConfig);
   const guess: Array<URL> = [];
   if (packageConfig.main !== undefined) {
     guess.push(
