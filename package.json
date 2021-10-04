@@ -56,6 +56,7 @@
     "lint": "eslint './src/**/*.ts{,x}' --ext .js,.ts,.tsx -f visualstudio",
     "test-debug": "DEBUG=ts-resolve,tsconfig-info jest",
     "test": "jest",
+    "test-coverage": "jest --coverage",
     "example1-debug": "yarn build && cd ./examples/example1 && TS_NODE_PROJECT=./packages/server/tsconfig.json DEBUG=ts-resolve,tsconfig-info node --loader ../esbuild-loader/loader.mjs --experimental-specifier-resolution=node --enable-source-maps ./packages/server/src/server.ts",
     "example1": "yarn build && cd ./examples/example1 && TS_NODE_PROJECT=./packages/server/tsconfig.json node --loader ../esbuild-loader/loader.mjs --experimental-specifier-resolution=node --enable-source-maps ./packages/server/src/server.ts",
     "prepare": "husky install"
