@@ -170,20 +170,21 @@ function convertTypescriptOutUrlToSourceLocation(
   const outFilePath = fileURLToPath(outFileUrl);
   let absOutDir: string | undefined = undefined;
   let tsConfigAbsPath: string | undefined = undefined;
-  let absRootDir: string | undefined = undefined;
   for (const [key, value] of tsConfigInfo.absOutDirToTsConfig.entries()) {
     if (outFilePath.startsWith(key)) {
       absOutDir = key;
       tsConfigAbsPath = value;
-      const tc = tsConfigInfo.tsconfigMap.get(tsConfigAbsPath);
-      absRootDir = path.join(path.dirname(tsConfigAbsPath), tc?.compilerOptions?.rootDir ?? "");
-      debug("-----> checking for root dir", absRootDir);
       break;
     }
   }
-  if (absOutDir === undefined || tsConfigAbsPath === undefined || absRootDir === undefined) {
+  if (absOutDir === undefined || tsConfigAbsPath === undefined) {
     return undefined;
   }
+
+  const tc = tsConfigInfo.tsconfigMap.get(tsConfigAbsPath);
+  // let absRootDir: string | undefined = undefined;
+  const absRootDir = path.join(path.dirname(tsConfigAbsPath), tc?.compilerOptions?.rootDir ?? "");
+  debug("-----> checking for root dir", absRootDir);
 
   if (absOutDir) {
     // const outDir = tsConfigInfo.absOutDirToTsConfig[absOutDir];
