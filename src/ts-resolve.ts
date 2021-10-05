@@ -168,18 +168,11 @@ function convertTypescriptOutUrlToSourceLocation(
   outFileUrl: URL
 ): { readonly fileUrl: URL; readonly tsConfigAbsPath: string } | undefined {
   const outFilePath = fileURLToPath(outFileUrl);
-  let absOutDir: string | undefined = undefined;
-  let tsConfigAbsPath: string | undefined = undefined;
-  for (const [key, value] of tsConfigInfo.absOutDirToTsConfig.entries()) {
-    if (outFilePath.startsWith(key)) {
-      absOutDir = key;
-      tsConfigAbsPath = value;
-      break;
-    }
-  }
-  if (absOutDir === undefined || tsConfigAbsPath === undefined) {
+  const thePaths = getAbsOutDirAndAbsTsconfigForTsFile(tsConfigInfo, outFilePath);
+  if (thePaths === undefined) {
     return undefined;
   }
+  const [absOutDir, tsConfigAbsPath] = thePaths;
 
   const tc = tsConfigInfo.tsconfigMap.get(tsConfigAbsPath);
   // let absRootDir: string | undefined = undefined;
@@ -195,6 +188,18 @@ function convertTypescriptOutUrlToSourceLocation(
     const convertedPath = path.join(absRootDir, remaining);
     debug("---->CONVERTED PATH", convertedPath);
     return { fileUrl: pathToFileURL(convertedPath), tsConfigAbsPath };
+  }
+  return undefined;
+}
+
+function getAbsOutDirAndAbsTsconfigForTsFile(
+  tsConfigInfo: TsConfigInfo,
+  outFilePath: string
+): readonly [absOutDir: string, absTsconfig: string] | undefined {
+  for (const [key, value] of tsConfigInfo.absOutDirToTsConfig.entries()) {
+    if (outFilePath.startsWith(key)) {
+      return [key, value];
+    }
   }
   return undefined;
 }
