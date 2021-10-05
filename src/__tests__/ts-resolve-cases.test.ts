@@ -15,14 +15,15 @@ onlySkip(tests).forEach((item) => {
     const { entryTsConfig, unsresolvedEntryTsFilePath, resolvedFileUrl, cwd, mfs } = item;
     const fileSystem = createFilesystem(mfs, cwd);
     // parentURL is undefined for the entry file
-    const importsStack: Array<readonly [parentURL: string | undefined, unresolved: string, resolved: string]> = [];
-    importsStack.push([undefined, unsresolvedEntryTsFilePath, resolvedFileUrl]);
+    type StackItem = { parentURL: string | undefined; unresolved: string; expectedUrl: string };
+    const importsStack: Array<StackItem> = [];
+    importsStack.push({ parentURL: undefined, unresolved: unsresolvedEntryTsFilePath, expectedUrl: resolvedFileUrl });
 
     while (importsStack.length > 0) {
-      const [parentURL, unresolvedUrl, expectedUrl] = importsStack.pop()!;
-      const resolved = tsResolve(unresolvedUrl, { conditions: [], parentURL }, entryTsConfig, fileSystem);
+      const { parentURL, unresolved, expectedUrl } = importsStack.pop()!;
+      const resolved = tsResolve(unresolved, { conditions: [], parentURL }, entryTsConfig, fileSystem);
       // eslint-disable-next-line @typescript-eslint/no-loop-func
-      test(`Resolve ${unresolvedUrl} (${(parentURL && fileURLToPath(parentURL)) ?? "undefined"})`, () => {
+      test(`Resolve ${unresolved} (${(parentURL && fileURLToPath(parentURL)) ?? "undefined"})`, () => {
         // Assert resolved url
         expect(resolved?.fileUrl).toBe(expectedUrl);
       });
@@ -35,7 +36,11 @@ onlySkip(tests).forEach((item) => {
         throw new Error("Resolved typescript file not found in mock file system.");
       }
       importsStack.push(
-        ...mfsFile.imports.map((imp) => [resolved.fileUrl, imp.unresolved, pathToFileURL(imp.resolved).href] as const)
+        ...mfsFile.imports.map((imp) => ({
+          parentURL: resolved.fileUrl,
+          unresolved: imp.unresolved,
+          expectedUrl: pathToFileURL(imp.resolved).href,
+        }))
       );
     }
   });
