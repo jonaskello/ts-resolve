@@ -13,6 +13,7 @@ const mfs: MockFilesystem = {
   "/root/packages/server/src/server.ts": {
     type: "TsFile",
     imports: [],
+    tsconfig: "/root/packages/server/tsconfig.json",
   },
 };
 

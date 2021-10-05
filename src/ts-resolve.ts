@@ -79,12 +79,6 @@ export function tsResolve(
   return resolved;
 }
 
-/**
- * @param {string} specifier
- * @param {string | URL | undefined} base
- * @param {Set<string>} conditions
- * @returns {URL}
- */
 function tsModuleResolve(
   specifier: string,
   base: string | undefined,
