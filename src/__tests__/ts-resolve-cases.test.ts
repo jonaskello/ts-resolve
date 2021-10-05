@@ -39,11 +39,12 @@ onlySkip(tests).forEach((item) => {
       if (mfsFile.type !== "TsFile") {
         fail(`Resolved typescript file ${mfsPath} not found in mock file system.`);
       }
+      // const expectedTsconfigUrl = pathToFileURL(mfsFile.tsconfig).href;
       // eslint-disable-next-line @typescript-eslint/no-loop-func
       test(`Resolve ${unresolved} (${(parentURL && fileURLToPath(parentURL)) ?? "undefined"})`, () => {
         // Assert resolved url
         expect(resolved.fileUrl).toBe(expectedUrl);
-        // expect(resolved.tsConfigUrl).toBe(mfsFile.tsconfig);
+        // expect(resolved.tsConfigUrl).toBe(expectedTsconfigUrl);
       });
       importsStack.push(
         ...mfsFile.imports.map((imp) => ({

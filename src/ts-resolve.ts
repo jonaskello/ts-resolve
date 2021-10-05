@@ -54,6 +54,8 @@ export function tsResolve(
   const parentURL = parentURLIn ?? filesystem.cwd();
   debug("RESOLVE: parentURL", parentURL);
 
+  const entryTsConfigUrl = pathToFileURL(path.join(filesystem.cwd(), entryTsConfig)).href;
+
   // If file explicitly ends in .ts then just return it
   // This can only happen for the entry file as typescript does not allow
   // import of .ts files
@@ -67,7 +69,7 @@ export function tsResolve(
     debug("specifier, parentURL", specifier, parentURL);
     const absFilePath = path.join(parentURL, specifier);
     const url = pathToFileURL(absFilePath);
-    return { fileUrl: url.href, tsConfigUrl: "EntryPoint" };
+    return { fileUrl: url.href, tsConfigUrl: entryTsConfigUrl };
   }
 
   // Get tsconfig info (it can be cached)
