@@ -111,7 +111,8 @@ function tsModuleResolve(
         return undefined;
       }
       const [, tsConfigAbsPath] = thePaths;
-      return { fileUrl: tsFileUrl.href, tsConfigUrl: tsConfigAbsPath };
+      const tsConfigUrl = pathToFileURL(tsConfigAbsPath).href;
+      return { fileUrl: tsFileUrl.href, tsConfigUrl };
     }
     return undefined;
   }
