@@ -8,6 +8,7 @@ const debug = debugCreator("tsconfig-info");
 export type TsConfigInfo = {
   readonly tsconfigMap: ReadonlyMap<string, Tsconfig>;
   readonly absOutDirToTsConfig: ReadonlyMap<string, string>;
+  readonly absRootDirToTsConfig: ReadonlyMap<string, string>;
 };
 // eslint-disable-next-line functional/no-let,functional/prefer-readonly-type
 let entryTsConfigInfoCache: Map<string, TsConfigInfo> = new Map();
@@ -42,14 +43,25 @@ export function buildTsConfigInfo(
   const absOutDirToTsConfig = new Map();
   for (const [k, v] of tsconfigMap.entries()) {
     if (v.compilerOptions?.outDir === undefined) {
-      throw new Error("Outdir must be defined for now...");
+      throw new Error("outDir must be defined for now...");
     }
     const absoluteOutDir = path.resolve(path.dirname(k), v.compilerOptions.outDir);
     absOutDirToTsConfig.set(absoluteOutDir, k);
   }
+
+  const absRootDirToTsConfig = new Map();
+  for (const [k, v] of tsconfigMap.entries()) {
+    if (v.compilerOptions?.rootDir === undefined) {
+      throw new Error("rootDir must be defined for now...");
+    }
+    const absoluteRootDir = path.resolve(path.dirname(k), v.compilerOptions.rootDir);
+    absRootDirToTsConfig.set(absoluteRootDir, k);
+  }
+
   return {
     tsconfigMap,
     absOutDirToTsConfig,
+    absRootDirToTsConfig,
   };
 }
 

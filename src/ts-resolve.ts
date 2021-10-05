@@ -104,18 +104,14 @@ function tsModuleResolve(
 
     const tsFileUrl = probeForTsFileInSamePathAsJsFile(parentTsFile, filesystem.isFile);
     if (tsFileUrl !== undefined) {
-      // const outFilePath = fileURLToPath(parentTsFile);
-      // const thePaths = getAbsOutDirAndAbsTsconfigForOutFile(tsConfigInfo, outFilePath);
-      // debug("getAbsOutDirAndAbsTsconfigForTsFile", tsConfigInfo, outFilePath);
-      // if (thePaths === undefined) {
-      //   debug("GOT relative with thePaths", thePaths);
-      //   return undefined;
-      // }
-      // const [, tsConfigAbsPath] = thePaths;
-      // This file belongs to the same TsConfig as it's ParentUrl, but we don't know
-      // which TsConfig the ParentUrl belongs to....
-      // Or is it allowed in typescript composite project to make a relative import to a file in a different TsConfig?
-      return { fileUrl: tsFileUrl.href, tsConfigUrl: "sameasaparent" };
+      const tsFilePath = fileURLToPath(tsFileUrl);
+      const thePaths = Array.from(tsConfigInfo.absRootDirToTsConfig.entries()).find((e) => tsFilePath.startsWith(e[0]));
+      debug("GOT relative with thePaths", thePaths);
+      if (thePaths === undefined) {
+        return undefined;
+      }
+      const [, tsConfigAbsPath] = thePaths;
+      return { fileUrl: tsFileUrl.href, tsConfigUrl: tsConfigAbsPath };
     }
     return undefined;
   }
