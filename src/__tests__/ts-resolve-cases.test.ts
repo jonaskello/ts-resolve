@@ -31,13 +31,13 @@ onlySkip(tests).forEach((item) => {
       const { parentURL, unresolved, expectedUrl } = importsStack.pop()!;
       const resolved = tsResolve(unresolved, { conditions: [], parentURL }, entryTsConfig, fileSystem);
       if (resolved === undefined) {
-        fail(`Specifier ${unresolved} resolved to undefined`);
+        throw new Error(`Specifier ${unresolved} resolved to undefined`);
       }
       // Get the mock file for the resolved file
       const mfsPath = fileURLToPath(resolved.fileUrl);
       const mfsFile = mfs[mfsPath];
       if (mfsFile.type !== "TsFile") {
-        fail(`Resolved typescript file ${mfsPath} not found in mock file system.`);
+        throw new Error(`Resolved typescript file ${mfsPath} not found in mock file system.`);
       }
       // const expectedTsconfigUrl = pathToFileURL(mfsFile.tsconfig).href;
       // eslint-disable-next-line @typescript-eslint/no-loop-func
