@@ -17,10 +17,12 @@ const mfs: MockFilesystem = {
   "/root/packages/server/src/server.ts": {
     type: "TsFile",
     imports: [{ unresolved: "./start-server", resolved: "/root/packages/server/src/start-server.ts" }],
+    tsconfig: "/root/packages/server/tsconfig.json",
   },
   "/root/packages/server/src/start-server.ts": {
     type: "TsFile",
     imports: [{ unresolved: "@app/shared", resolved: "/root/packages/shared/src/index.ts" }],
+    tsconfig: "/root/packages/server/tsconfig.json",
   },
   // shared
   "/root/packages/shared/package.json": {
@@ -31,7 +33,11 @@ const mfs: MockFilesystem = {
     type: "JsonFile",
     json: { compilerOptions: { outDir: "lib", rootDir: "src" } },
   },
-  "/root/packages/shared/src/index.ts": { type: "TsFile", imports: [] },
+  "/root/packages/shared/src/index.ts": {
+    type: "TsFile",
+    imports: [],
+    tsconfig: "/root/packages/shared/tsconfig.json",
+  },
   // node_modules
   "/root/node_modules/@app/server": { type: "Symlink", realPath: "/root/packages/server" },
   "/root/node_modules/@app/shared": { type: "Symlink", realPath: "/root/packages/shared" },

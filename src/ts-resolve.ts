@@ -54,6 +54,8 @@ export function tsResolve(
   const parentURL = parentURLIn ?? filesystem.cwd();
   debug("RESOLVE: parentURL", parentURL);
 
+  const entryTsConfigUrl = pathToFileURL(path.join(filesystem.cwd(), entryTsConfig)).href;
+
   // If file explicitly ends in .ts then just return it
   // This can only happen for the entry file as typescript does not allow
   // import of .ts files
@@ -67,7 +69,7 @@ export function tsResolve(
     debug("specifier, parentURL", specifier, parentURL);
     const absFilePath = path.join(parentURL, specifier);
     const url = pathToFileURL(absFilePath);
-    return { fileUrl: url.href, tsConfigUrl: "EntryPoint" };
+    return { fileUrl: url.href, tsConfigUrl: entryTsConfigUrl };
   }
 
   // Get tsconfig info (it can be cached)
@@ -79,12 +81,6 @@ export function tsResolve(
   return resolved;
 }
 
-/**
- * @param {string} specifier
- * @param {string | URL | undefined} base
- * @param {Set<string>} conditions
- * @returns {URL}
- */
 function tsModuleResolve(
   specifier: string,
   base: string | undefined,
@@ -97,22 +93,26 @@ function tsModuleResolve(
   // Resolve path specifiers
   if (shouldBeTreatedAsRelativeOrAbsolutePath(specifier)) {
     debug("tsModuleResolve: resolveFilePath", specifier, base);
-    const resolved = new URL(specifier, base);
-
     // parentURL is the URL returned by previous resolve, so it is always a fully resolved specifier
     // If a ./foo.ts file was resolved for
     // import xxxx from "./foo.js"
     // Then ./foo.ts file will be the parentURL, not foo.js
     // This means abs/relative imports never need mapping of path from output to input
+    const parentTsFile = new URL(specifier, base);
 
-    debug("myModuleResolve: resolved", resolved.href);
+    debug("myModuleResolve: resolved", parentTsFile.href);
 
-    const tsFileUrl = probeForTsFileInSamePathAsJsFile(resolved, filesystem.isFile);
+    const tsFileUrl = probeForTsFileInSamePathAsJsFile(parentTsFile, filesystem.isFile);
     if (tsFileUrl !== undefined) {
-      // This file belongs to the same TsConfig as it's ParentUrl, but we don't know
-      // which TsConfig the ParentUrl belongs to....
-      // Or is it allowed in typescript composite project to make a relative import to a file in a different TsConfig?
-      return { fileUrl: tsFileUrl.href, tsConfigUrl: "SameAsParent" };
+      const tsFilePath = fileURLToPath(tsFileUrl);
+      const thePaths = Array.from(tsConfigInfo.absRootDirToTsConfig.entries()).find((e) => tsFilePath.startsWith(e[0]));
+      debug("GOT relative with thePaths", thePaths);
+      if (thePaths === undefined) {
+        return undefined;
+      }
+      const [, tsConfigAbsPath] = thePaths;
+      const tsConfigUrl = pathToFileURL(tsConfigAbsPath).href;
+      return { fileUrl: tsFileUrl.href, tsConfigUrl };
     }
     return undefined;
   }
@@ -172,22 +172,16 @@ function convertTypescriptOutUrlToSourceLocation(
   outFileUrl: URL
 ): { readonly fileUrl: URL; readonly tsConfigAbsPath: string } | undefined {
   const outFilePath = fileURLToPath(outFileUrl);
-  let absOutDir: string | undefined = undefined;
-  let tsConfigAbsPath: string | undefined = undefined;
-  let absRootDir: string | undefined = undefined;
-  for (const [key, value] of tsConfigInfo.absOutDirToTsConfig.entries()) {
-    if (outFilePath.startsWith(key)) {
-      absOutDir = key;
-      tsConfigAbsPath = value;
-      const tc = tsConfigInfo.tsconfigMap.get(tsConfigAbsPath);
-      absRootDir = path.join(path.dirname(tsConfigAbsPath), tc?.compilerOptions?.rootDir ?? "");
-      debug("-----> checking for root dir", absRootDir);
-      break;
-    }
-  }
-  if (absOutDir === undefined || tsConfigAbsPath === undefined || absRootDir === undefined) {
+  const thePaths = getAbsOutDirAndAbsTsconfigForOutFile(tsConfigInfo, outFilePath);
+  if (thePaths === undefined) {
     return undefined;
   }
+  const [absOutDir, tsConfigAbsPath] = thePaths;
+
+  const tc = tsConfigInfo.tsconfigMap.get(tsConfigAbsPath);
+  // let absRootDir: string | undefined = undefined;
+  const absRootDir = path.join(path.dirname(tsConfigAbsPath), tc?.compilerOptions?.rootDir ?? "");
+  debug("-----> checking for root dir", absRootDir);
 
   if (absOutDir) {
     // const outDir = tsConfigInfo.absOutDirToTsConfig[absOutDir];
@@ -200,6 +194,19 @@ function convertTypescriptOutUrlToSourceLocation(
     return { fileUrl: pathToFileURL(convertedPath), tsConfigAbsPath };
   }
   return undefined;
+}
+
+function getAbsOutDirAndAbsTsconfigForOutFile(
+  tsConfigInfo: TsConfigInfo,
+  outFilePath: string
+): readonly [absOutDir: string, absTsconfig: string] | undefined {
+  return Array.from(tsConfigInfo.absOutDirToTsConfig.entries()).find((e) => outFilePath.startsWith(e[0]));
+  // for (const [key, value] of tsConfigInfo.absOutDirToTsConfig.entries()) {
+  //   if (outFilePath.startsWith(key)) {
+  //     return [key, value];
+  //   }
+  // }
+  // return undefined;
 }
 
 /**

@@ -11,6 +11,7 @@ export type JsonFile = { readonly type: "JsonFile"; readonly json: object };
 export type TsFile = {
   readonly type: "TsFile";
   readonly imports: ReadonlyArray<{ readonly unresolved: string; readonly resolved: string }>;
+  readonly tsconfig: string;
 };
 export type Symlink = { readonly type: "Symlink"; readonly realPath: string };
 
