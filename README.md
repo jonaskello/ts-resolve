@@ -11,7 +11,7 @@ Resolve typescript ES modules
 
 ## Overview
 
-This package will resolve typescript ES modules. It includes support for the new `exports` and `imports` sections of `package.json`.
+This package will resolve typescript ES modules. It is mainly built for usage in the resolve hook of a node loader but the API should be generic enough to be useful in other scenarions.
 
 For relative and absolute paths it is easy to resolve typescript files, just change the file extension to `.ts` or `.tsx`. However for bare specifiers it is a bit more tricky. Most of the time a bare specifier will resolve to a package installed into `node_modules` that is not part of your source code. But if you are using project references and yarn/npm workspaces then bare specifiers may point to a package that is part of your project.
 
@@ -27,7 +27,37 @@ The aim of this package is to resolve all cases including:
 yarn add --dev ts-esm-resolve
 ```
 
-## How to use
+## API
+
+### tsResolve
+
+```ts
+export function tsResolve(
+  specifier: string,
+  context: { parentURL: string | undefined; conditions: ReadonlyArray<string> },
+  tsConfig: string,
+  fileSystem?: FileSystem | undefined
+): { fileUrl: string; tsConfigUrl: string } | undefined;
+```
+
+Resolves a specifier.
+
+_Input_
+
+- `specifier` - A specifier to resolve, eg. `./foo/bar.js` or `@myapp/package-a`.
+- `context.parentURL` - The URL which is the parent of the resolve (normally the file that does the `import` of the `specifier`). Relative resolves will resolve relative to the parent URL path. Is `undefined` for the entry file since it has no parent.
+- `context.conditions` - [Conditions](https://nodejs.org/api/packages.html#packages_conditional_exports) for resolve.
+- `tsConfig` - A tsconfig.json file. In the case of [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) it does not have to be the actual `tsconfig.json` that is associated with the resolved file, but it does have to have a reference to the `tsconfig.json` that is associated with the resolved file. So if you have a main `tsconfig.json` that references every other `tsconfig.json` in the workspace, you can use it for all calls.
+- `fileSystem` - Optional. An object with filesystem methods. Could be used for testing or in scenarios where you don't want to make lookups in the normal filesystem. If it is not provided then a default implementation that reads the normal filesystem will be used.
+
+_Returns_
+
+An object with keys:
+
+- `fileUrl` - URL to the resolved file. If the resolved specifier was found to be created from compiling a typescript file then this will be that typescript file.
+- `tsConfigUrl` - URL for the `tsconfig.json` that is associated with the resolved file. Useful if you want to transpile the resolved file.
+
+## How to use with a loader
 
 You can use this package as a part of build a transpiling [node loader]() for typescript. Here is an example using esbuild for the transpile:
 
