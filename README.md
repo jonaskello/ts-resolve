@@ -1,11 +1,11 @@
-# ts-esm-resolve
+# ts-resolve
 
-[![npm version](https://img.shields.io/npm/v/ts-esm-resolve.svg?style=flat)](https://www.npmjs.com/package/ts-esm-resolve)
-[![CI](https://github.com/jonaskello/ts-esm-resolve/actions/workflows/ci.yml/badge.svg)](https://github.com/jonaskello/ts-esm-resolve/actions/workflows/ci.yml)
-[![Coverage Status](https://codecov.io/gh/jonaskello/ts-esm-resolve/branch/main/graph/badge.svg)](https://codecov.io/gh/jonaskello/ts-esm-resolve)
+[![npm version](https://img.shields.io/npm/v/ts-resolve.svg?style=flat)](https://www.npmjs.com/package/ts-resolve)
+[![CI](https://github.com/jonaskello/ts-resolve/actions/workflows/ci.yml/badge.svg)](https://github.com/jonaskello/ts-resolve/actions/workflows/ci.yml)
+[![Coverage Status](https://codecov.io/gh/jonaskello/ts-resolve/branch/main/graph/badge.svg)](https://codecov.io/gh/jonaskello/ts-resolve)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat)](https://github.com/prettier/prettier)
 [![types](https://img.shields.io/npm/types/scrub-js.svg)](https://www.typescriptlang.org/)
-[![MIT license](https://img.shields.io/github/license/jonaskello/ts-esm-resolve.svg?style=flat)](https://opensource.org/licenses/MIT)
+[![MIT license](https://img.shields.io/github/license/jonaskello/ts-resolve.svg?style=flat)](https://opensource.org/licenses/MIT)
 
 Resolve typescript ES modules
 
@@ -24,7 +24,7 @@ The aim of this package is to resolve all cases including:
 ## How to install
 
 ```
-yarn add --dev ts-esm-resolve
+yarn add --dev ts-resolve
 ```
 
 ## API
@@ -70,7 +70,7 @@ You can use this package as a part of build a transpiling [node loader](https://
 // file loader.mjs
 import { fileURLToPath } from "url";
 import { transformSync } from "esbuild";
-import { tsResolve } from "ts-esm-resolve";
+import { tsResolve } from "ts-resolve";
 
 export function resolve(specifier, context, defaultResolve) {
   const entryTsConfig = process.env["TS_NODE_PROJECT"];

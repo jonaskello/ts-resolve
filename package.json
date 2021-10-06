@@ -1,5 +1,5 @@
 {
-  "name": "ts-esm-resolve",
+  "name": "ts-resolve",
   "version": "0.2.0",
   "description": "Resolve typescript ES modules",
   "main": "./lib/index.js",
@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jonaskello/ts-esm-resolve.git"
+    "url": "git+https://github.com/jonaskello/ts-resolve.git"
   },
   "keywords": [
     "typescript",
