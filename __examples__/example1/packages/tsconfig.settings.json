@@ -28,6 +28,6 @@
     "strict": true,
     // "keyofStringsOnly": true,
     // "keyofStringsOnly": false, // Needed for Object.fromEntries to work
-    "skipLibCheck": true,
+    "skipLibCheck": true
   }
 }

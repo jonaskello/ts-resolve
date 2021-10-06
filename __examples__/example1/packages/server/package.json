@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "name": "@app/server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "license": "MIT",
+  "dependencies": {
+    "koa": "^2.13.1"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.13.4"
+  }
+}
