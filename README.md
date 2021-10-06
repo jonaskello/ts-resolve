@@ -11,7 +11,7 @@ Resolve typescript ES modules
 
 ## Overview
 
-This package will resolve typescript ES modules. It is mainly built for usage in the resolve hook of a [node loader](https://nodejs.org/api/esm.html#esm_loaders) but the API should be generic enough to be useful in other scenarions.
+Given an import specifier for a javascript file, this package will resolve it back to the typescript file that would compile into that javascript file. Currently this package will only resolve typescript ES modules. It is mainly built for usage in the resolve hook of a [node loader](https://nodejs.org/api/esm.html#esm_loaders) but the API should be generic enough to be useful in other scenarions.
 
 For relative and absolute paths it is easy to resolve typescript files from their javascript counterpart, just change the file extension to `.ts` or `.tsx`. However for bare specifiers it is a bit more tricky. Most of the time a bare specifier will resolve to a package installed into `node_modules` that is not part of your source code. But if you are using [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) and yarn/npm [workspaces](https://classic.yarnpkg.com/lang/en/docs/workspaces/) then bare specifiers may point to a package that is part of your project.
 
