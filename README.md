@@ -49,6 +49,11 @@ _Input_
 - `context.conditions` - [Conditions](https://nodejs.org/api/packages.html#packages_conditional_exports) for resolve.
 - `tsConfig` - A tsconfig.json file. In the case of [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) it does not have to be the actual `tsconfig.json` that is associated with the resolved file, but it does have to have a reference to the `tsconfig.json` that is associated with the resolved file. So if you have a main `tsconfig.json` that references every other `tsconfig.json` in the workspace, you can use it for all calls.
 - `fileSystem` - Optional. An object with filesystem methods. Could be used for testing or in scenarios where you don't want to make lookups in the normal filesystem. If it is not provided then a default implementation that reads the normal filesystem will be used.
+  - `cwd: () => string`
+  - `isFile: (path: string) => boolean`
+  - `isDirectory: (path: string) => boolean`
+  - `getRealpath: (path: string) => string | undefined;`
+  - `readFile: (filename: string) => string | undefined`
 
 _Returns_
 
