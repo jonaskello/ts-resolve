@@ -59,7 +59,7 @@ An object with keys:
 
 ## How to use with a loader
 
-You can use this package as a part of build a transpiling [node loader]() for typescript. Here is an example using esbuild for the transpile:
+You can use this package as a part of build a transpiling [node loader](https://nodejs.org/api/esm.html#esm_loaders) for typescript. Here is an example using esbuild for the transpile:
 
 ```js
 // file loader.mjs
