@@ -3,6 +3,7 @@ module.exports = {
   parserOptions: {
     project: "./tsconfig.json",
   },
+  ignorePatterns: ["**/__examples__/**/*"],
   rules: {
     "@typescript-eslint/consistent-type-imports": "off",
     "@typescript-eslint/no-unnecessary-condition": "off",
