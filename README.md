@@ -65,7 +65,7 @@ You can use this package as a part of build a transpiling [node loader]() for ty
 // file loader.mjs
 import { fileURLToPath } from "url";
 import { transformSync } from "esbuild";
-import { tsResolve } from "../../lib/ts-resolve.js";
+import { tsResolve } from "ts-esm-resolve";
 
 export function resolve(specifier, context, defaultResolve) {
   const entryTsConfig = process.env["TS_NODE_PROJECT"];
