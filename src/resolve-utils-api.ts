@@ -27,7 +27,12 @@ type PackageConfig = {
   readonly imports: unknown | undefined;
 };
 
-export function getPackageConfig(readFile: ReadFile, path: string, specifier: string, base: string): PackageConfig {
+export function getPackageConfig(
+  readFile: ReadFile,
+  path: string,
+  specifier: string,
+  base: string | URL | undefined
+): PackageConfig {
   return ru.getPackageConfig(readFile, path, specifier, base);
 }
 

@@ -1,17 +1,8 @@
 import { URL, pathToFileURL, fileURLToPath } from "url";
 import path from "path";
 import debugCreator from "debug";
-import {
-  getPackageConfig, // getPackageConfig does filesystem access
-  shouldBeTreatedAsRelativeOrAbsolutePath,
-  parsePackageName,
-  getConditionsSet,
-  packageImportsResolve,
-  packageExportsResolve,
-  resolveSelf,
-  findPackageJson,
-  legacyMainResolve2,
-} from "./resolve-utils";
+import * as ru from "./resolve-utils";
+import * as rua from "./resolve-utils-api";
 import { createDefaultFilesystem, IsFile, FileSystem, GetRealpath, IsDirectory, ReadFile } from "./filesystem";
 import { getTsConfigInfo, TsConfigInfo } from "./tsconfig-info";
 
@@ -76,7 +67,7 @@ export function tsResolve(
   const tsConfigInfo = getTsConfigInfo(filesystem, entryTsConfig);
 
   // Try to resolve to a typescript file, returns undefined if it could not be resolved
-  const conditionsSet = getConditionsSet(conditions);
+  const conditionsSet = ru.getConditionsSet(conditions);
   const resolved = tsModuleResolve(specifier, parentURL, conditionsSet, tsConfigInfo, filesystem);
   return resolved;
 }
@@ -91,7 +82,7 @@ function tsModuleResolve(
   debug("tsModuleResolve: START");
 
   // Resolve path specifiers
-  if (shouldBeTreatedAsRelativeOrAbsolutePath(specifier)) {
+  if (ru.shouldBeTreatedAsRelativeOrAbsolutePath(specifier)) {
     debug("tsModuleResolve: resolveFilePath", specifier, base);
     // parentURL is the URL returned by previous resolve, so it is always a fully resolved specifier
     // If a ./foo.ts file was resolved for
@@ -121,7 +112,7 @@ function tsModuleResolve(
   let possibleUrls: ReadonlyArray<URL> = [];
   if (specifier.startsWith("#")) {
     debug("myModuleResolve: packageImportsResolve");
-    const { resolved } = packageImportsResolve(packageResolve, specifier, base, conditions, filesystem.readFile)!;
+    const { resolved } = rua.packageImportsResolve(packageResolve, specifier, base, conditions, filesystem.readFile)!;
     possibleUrls = [resolved];
   } else {
     debug("myModuleResolve: else");
@@ -269,24 +260,24 @@ function packageResolve(
   readFile: ReadFile
 ): ReadonlyArray<URL> {
   // Parse the specifier as a package name (package or @org/package) and separate out the sub-path
-  const { packageName, packageSubpath, isScoped } = parsePackageName(specifier, base);
+  const { packageName, packageSubpath, isScoped } = ru.parsePackageName(specifier, base);
 
   // ResolveSelf
   // Check if the specifier resolves to the same package we are resolving from
-  const selfResolved = resolveSelf(packageResolve, base, packageName, packageSubpath, conditions, readFile);
+  const selfResolved = ru.resolveSelf(packageResolve, base, packageName, packageSubpath, conditions, readFile);
   if (selfResolved) {
     return [selfResolved];
   }
 
   // Find package.json by ascending the file system
-  const packageJsonMatch = findPackageJson(packageName, base, isScoped, isDirectory);
+  const packageJsonMatch = ru.findPackageJson(packageName, base, isScoped, isDirectory);
 
   // If package.json was found, resolve from it's exports or main field
   if (packageJsonMatch) {
     const [packageJSONUrl, packageJSONPath] = packageJsonMatch;
-    const packageConfig = getPackageConfig(readFile, packageJSONPath, specifier, base);
+    const packageConfig = rua.getPackageConfig(readFile, packageJSONPath, specifier, base);
     if (packageConfig.exports !== undefined && packageConfig.exports !== null) {
-      const per = packageExportsResolve(
+      const per = ru.packageExportsResolve(
         packageResolve,
         packageJSONUrl,
         packageSubpath,
@@ -299,7 +290,7 @@ function packageResolve(
     debug("packageSubpath", packageSubpath);
     if (packageSubpath === ".") {
       // return legacyMainResolve(packageJSONUrl, packageConfig, base);
-      return legacyMainResolve2(packageJSONUrl, packageConfig);
+      return ru.legacyMainResolve2(packageJSONUrl, packageConfig);
     }
     return [new URL(packageSubpath, packageJSONUrl)];
   }
