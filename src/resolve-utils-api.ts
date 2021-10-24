@@ -56,3 +56,42 @@ export function packageImportsResolve(
 ): { readonly resolved: URL; readonly exact: boolean } {
   return ru.packageImportsResolve(packageResolve, name, base, conditions, readFile);
 }
+
+export function getConditionsSet(conditions: ReadonlyArray<string>): ReadonlySet<string> {
+  return ru.getConditionsSet(conditions);
+}
+
+export function shouldBeTreatedAsRelativeOrAbsolutePath(specifier: string): boolean {
+  return ru.shouldBeTreatedAsRelativeOrAbsolutePath(specifier);
+}
+
+export function parsePackageName(
+  specifier: string,
+  base: string | URL | undefined
+): { readonly packageName: string; readonly packageSubpath: string; readonly isScoped: boolean } {
+  return ru.parsePackageName(specifier, base);
+}
+
+export function legacyMainResolve2(packageJSONUrl: string | URL, packageConfig: PackageConfig): ReadonlyArray<URL> {
+  return ru.legacyMainResolve2(packageJSONUrl, packageConfig);
+}
+
+export function resolveSelf(
+  packageResolve: PackageResolve,
+  base: string | URL | undefined,
+  packageName: string,
+  packageSubpath: string,
+  conditions: ReadonlySet<string>,
+  readFile: ReadFile
+): URL {
+  return ru.resolveSelf(packageResolve, base, packageName, packageSubpath, conditions, readFile);
+}
+
+export function findPackageJson(
+  packageName: string,
+  base: string | URL | undefined,
+  isScoped: boolean,
+  isDirectory: IsDirectory
+): readonly [packageJSONUrl: URL, packageJSONPath: string] | undefined {
+  return ru.findPackageJson(packageName, base, isScoped, isDirectory);
+}

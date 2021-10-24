@@ -867,7 +867,7 @@ function findPackageJson(
     }
 
     // Package match.
-    return [packageJSONUrl, packageJSONPath];
+    return [packageJSONUrl, packageJSONPath] as const;
     // Cross-platform root check.
   } while (packageJSONPath.length !== lastPath.length);
   return undefined;
