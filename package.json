@@ -24,6 +24,9 @@
     "LICENSE",
     "README.md"
   ],
+  "engines": {
+    "node": ">=17.0.1"
+  },
   "dependencies": {
     "debug": "^4.3.2",
     "json5": "^2.2.0",
